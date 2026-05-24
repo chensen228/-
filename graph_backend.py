@@ -91,9 +91,16 @@ class CampusGraphService:
     def overview(self, dataset: dict[str, Any], selected_student_id: int | None = None) -> dict[str, Any]:
         graph = self._build_graph(dataset)
         selected_student = f"student:{selected_student_id}" if selected_student_id else None
-        export_signature = self._export_cypher(dataset)
-        if self.driver is not None:
-            self._sync_to_neo4j(export_signature)
+        cypher_path = str(self.cypher_path)
+        cypher_name = self.cypher_path.name
+        try:
+            export_signature = self._export_cypher(dataset)
+            if self.driver is not None:
+                self._sync_to_neo4j(export_signature)
+        except Exception:
+            export_signature = ""
+            cypher_path = "Cypher 导出失败，当前已自动降级为内存分析模式"
+            cypher_name = "导出已跳过"
         return {
             "node_count": graph.number_of_nodes(),
             "edge_count": graph.number_of_edges(),
@@ -106,8 +113,8 @@ class CampusGraphService:
             "book_recommendations": self._book_recommendations(graph, selected_student),
             "path_showcase": self._path_showcase(graph, selected_student),
             "cypher_examples": self._cypher_examples(graph, selected_student),
-            "cypher_path": str(self.cypher_path),
-            "cypher_name": self.cypher_path.name,
+            "cypher_path": cypher_path,
+            "cypher_name": cypher_name,
             "network_data": self._generate_vis_network(graph),
         }
 
