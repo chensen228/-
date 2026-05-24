@@ -1,0 +1,16 @@
+[
+  {
+    "keyword": "Redis",
+    "source": "seed",
+    "expireAt": "2026-05-24 16:54:53",
+    "_id": "search_session_cache-0001",
+    "createdAt": "2026-05-24 15:24:53"
+  },
+  {
+    "keyword": "MongoDB",
+    "source": "seed",
+    "expireAt": "2026-05-24 16:54:53",
+    "_id": "search_session_cache-0002",
+    "createdAt": "2026-05-24 15:24:53"
+  }
+]

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}数据治理 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="治理页导航">
+  <a href="#governance-catalog">主数据目录</a>
+  <a href="#governance-score">质量评分</a>
+  <a href="#governance-rules">治理规则</a>
+  <a href="#governance-lineage">血缘分层</a>
+  <a href="#governance-innovation">创新与扩展</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="subsystem-hero governance-tone">
+  <div>
+    <p class="eyebrow">Data Governance</p>
+    <h2>主数据与质量治理实验室</h2>
+    <p>这一页集中展示主数据管理、质量维度、治理留痕和数据血缘，体现系统对数据一致性和可追踪性的支持。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">综合质量：{{ quality_score_text }} / 100</span>
+    <span class="pill">评级：{{ quality_label }}</span>
+    <span class="pill">主数据实体：{{ master_entity_count }}</span>
+    <span class="pill">覆盖记录：{{ master_record_count }}</span>
+    <span class="pill">快照时间：{{ snapshot_at }}</span>
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div id="governance-catalog"></div>
+    <div class="panel-heading">
+      <h3>主数据目录</h3>
+      <p>用业务主键统一三大子系统，是这套项目最容易讲出“治理思维”的地方。</p>
+    </div>
+    <div class="catalog-grid">
+      {% for item in master_catalog %}
+        <article class="catalog-card">
+          <strong>{{ item.entity }}</strong>
+          <small>业务主键：{{ item.business_key }}</small>
+          <small>责任部门：{{ item.owner }}</small>
+          <p>记录量：{{ item.count }}</p>
+          <p>{{ item.scope }}</p>
+          <small>存储：{{ item.storage }}</small>
+          <small>下游：{{ item.downstream }}</small>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div id="governance-score"></div>
+    <div class="panel-heading">
+      <h3>质量维度评分</h3>
+      <p>按完整性、唯一性、一致性、关联完整性和时效性给出质量量化结果。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in quality_dimensions %}
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>{{ item.name }}</strong>
+            <span>{{ item.status }} · {{ item.detail }}</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.score if item.score < 100 else 100 }}%"></span>
+          </div>
+          <em>{{ item.score }}</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="governance-rules">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>治理规则检查</h3>
+      <p>这些规则用于对核心数据的完整性、唯一性和一致性进行持续检查。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in quality_rules %}
+        <div class="warning-card {% if item.status == '通过' %}alt{% endif %}">
+          <strong>{{ item.rule }}</strong>
+          <span>{{ item.passed }}/{{ item.total }}</span>
+          <small>评分 {{ item.score }} · {{ item.status }}</small>
+          <small>{{ item.detail }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div id="governance-lineage"></div>
+    <div class="panel-heading">
+      <h3>数据血缘与分层</h3>
+      <p>这里展示主数据如何流向缓存、文档层和图谱分析模块。</p>
+    </div>
+    <div class="timeline">
+      {% for item in lineage_flow %}
+        <div class="timeline-item">
+          <strong>{{ item.stage }}</strong>
+          <span>{{ item.detail }}</span>
+          <small>{{ item.value }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="governance-innovation">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>项目创新点</h3>
+      <p>这一部分汇总系统在治理层面的结构化设计要点。</p>
+    </div>
+    <div class="stacked-blocks">
+      {% for item in innovation_points %}
+        <div class="stack-block">
+          <p>{{ item }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>下一步可扩展方向</h3>
+      <p>这些方向可以继续扩展治理规则、质量模型和数据服务能力。</p>
+    </div>
+    <div class="stacked-blocks">
+      {% for item in recommendations %}
+        <div class="stack-block">
+          <p>{{ item }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>一致性与补偿思路</h3>
+      <p>治理不仅是看评分，还要说明多库协同时如何避免数据写乱和口径漂移。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>主数据口径</h4>
+        <p>学生、教师、图书、课程和空间等核心对象由 SQLite 主数据统一维护，保证业务主键和约束口径稳定。</p>
+      </div>
+      <div class="stack-block">
+        <h4>最终一致性</h4>
+        <p>Redis 和 MongoDB 保存的是排行、摘要和留痕文档，允许在事务提交后完成同步，并通过补偿脚本对账重建。</p>
+      </div>
+      <div class="stack-block">
+        <h4>治理快照</h4>
+        <p>MongoDB 会保留质量快照和过程记录，使治理结果可以回溯，而不是只保留当前展示值。</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>分层存储演进方向</h3>
+      <p>如果数据量继续增大，可以按热度和时间窗口继续细分数据存储层次。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>热数据</h4>
+        <p>排行榜、名额、最近检索词等高频读写数据继续由 Redis 负责，优先保证访问速度。</p>
+      </div>
+      <div class="stack-block">
+        <h4>温数据</h4>
+        <p>近阶段行为日志、预警画像、周报和评语等过程文档保留在 MongoDB，方便聚合与追踪。</p>
+      </div>
+      <div class="stack-block">
+        <h4>冷数据</h4>
+        <p>历史归档日志可继续沉淀到 HDFS 或对象存储，用于离线分析和长期留存。</p>
+      </div>
+    </div>
+  </article>
+</section>
+{% endblock %}

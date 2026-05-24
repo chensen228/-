@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block title %}实践教学平台 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="实践页导航">
+  <a href="#practice-summary">总体概览</a>
+  <a href="#practice-risk">风险画像</a>
+  <a href="#practice-actions">预约与周报</a>
+  <a href="#practice-progress">进度与资源</a>
+  <a href="#practice-logs">过程记录</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="subsystem-hero practice-tone">
+  <div>
+    <p class="eyebrow">Subsystem 03</p>
+    <h2>实践教学综合管理平台</h2>
+    <p>涵盖实验室预约、实践签到、实习周报、进度追踪和导师评语，突出过程数据治理与半结构化数据管理。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">MySQL/SQLite: 预约、任务、签到、周报索引</span>
+    <span class="pill">Redis: 实验室名额、签到令牌、进度缓存</span>
+    <span class="pill">Mongo: 周报正文、导师评语、过程留痕</span>
+  </div>
+</section>
+
+<section class="section-grid three-up" id="practice-summary">
+  <article class="feature-card stat-panel">
+    <h3>{{ teacher_dashboard.ongoingProjects or 0 }}</h3>
+    <p>进行中项目</p>
+  </article>
+  <article class="feature-card stat-panel">
+    <h3>{{ teacher_dashboard.onTimeTasks or 0 }}</h3>
+    <p>按期推进任务</p>
+  </article>
+  <article class="feature-card stat-panel">
+    <h3>{{ teacher_dashboard.riskTasks or 0 }}</h3>
+    <p>待关注风险任务</p>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>任务推进榜</h3>
+      <p>把周报提交带来的进度变化实时写入 Redis，更容易体现过程管理的动态性。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in task_rankings %}
+        <div class="rank-bar-row">
+          <div class="rank-copy">
+            <strong>{{ loop.index }}. {{ item.name }}</strong>
+            <span>{{ item.subline }}</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.bar_width }}%"></span>
+          </div>
+          <em>{{ item.score }}%</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>实验室利用榜</h3>
+      <p>补上一层资源利用分析，实践平台看起来会更完整，也更像真实管理系统。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in lab_rankings %}
+        <div class="rank-bar-row">
+          <div class="rank-copy">
+            <strong>{{ loop.index }}. {{ item.name }}</strong>
+            <span>{{ item.subline }}</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.bar_width }}%"></span>
+          </div>
+          <em>{{ item.meta }}</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h3>当前演示学生</h3>
+    <p>便于切换不同学生的实践任务和周报提交动作。</p>
+  </div>
+  <form method="get" action="{{ url_for('practice') }}" class="inline-form">
+    <select name="student_id">
+      {% for student in students %}
+        <option value="{{ student.student_id }}" {% if student.student_id == selected_student_id %}selected{% endif %}>{{ student.student_name }} · {{ student.major }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="secondary-button">切换视角</button>
+  </form>
+</section>
+
+<section class="insight-strip">
+  <article class="insight-card">
+    <span>预约记录</span>
+    <strong>{{ bookings|length }}</strong>
+    <small>当前页面中可直接查看的实验室预约数量</small>
+  </article>
+  <article class="insight-card">
+    <span>签到记录</span>
+    <strong>{{ attendance|length }}</strong>
+    <small>用于反映过程活跃度与到场情况</small>
+  </article>
+  <article class="insight-card">
+    <span>周报记录</span>
+    <strong>{{ reports|length }}</strong>
+    <small>关系库索引后的过程材料数量</small>
+  </article>
+  <article class="insight-card">
+    <span>风险快照</span>
+    <strong>{{ mongo_risks|length }}</strong>
+    <small>已写入 MongoDB 的风险画像文档</small>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="practice-risk">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>当前学生风险画像</h3>
+      <p>根据任务进度、周报频率、签到情况和资源使用记录自动生成过程性风险评分。</p>
+    </div>
+    {% if focus_risk_profile %}
+      <article class="risk-profile-card risk-{{ focus_risk_profile.tone }}">
+        <div class="board-head">
+          <div>
+            <h4>{{ focus_risk_profile.student_name }} · {{ focus_risk_profile.project_title }}</h4>
+            <p>{{ focus_risk_profile.base_name }} · 导师 {{ focus_risk_profile.mentor_name }}</p>
+          </div>
+          <span class="status-chip status-{{ focus_risk_profile.tone }}">{{ focus_risk_profile.risk_level }}</span>
+        </div>
+        <div class="warning-grid">
+          <div class="warning-card alt">
+            <strong>{{ focus_risk_profile.risk_score }}</strong>
+            <span>风险分</span>
+            <small>分数越高越需要干预</small>
+          </div>
+          <div class="warning-card">
+            <strong>{{ focus_risk_profile.health_score }}</strong>
+            <span>健康分</span>
+            <small>综合反映过程稳定性</small>
+          </div>
+          <div class="warning-card alt">
+            <strong>{{ focus_risk_profile.progress }}%</strong>
+            <span>当前进度</span>
+            <small>周报 {{ focus_risk_profile.weekly_count }} 份</small>
+          </div>
+          <div class="warning-card">
+            <strong>{{ focus_risk_profile.attendance_count }}</strong>
+            <span>签到次数</span>
+            <small>资源预约 {{ focus_risk_profile.booking_count }} 次</small>
+          </div>
+        </div>
+        <div class="route-list">
+          {% for item in focus_risk_profile.rule_hits %}
+            <span class="step-pill">{{ item }}</span>
+          {% endfor %}
+          {% for item in focus_risk_profile.suggestions %}
+            <span class="step-pill">建议：{{ item }}</span>
+          {% endfor %}
+        </div>
+      </article>
+    {% else %}
+      <p class="empty-state">当前暂无风险画像数据。</p>
+    {% endif %}
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>风险分层总览</h3>
+      <p>除了展示单个学生，还按高风险、中风险、低风险对全部实践任务进行分层，适合讲“过程预警”。</p>
+    </div>
+    <div class="warning-grid">
+      <div class="warning-card">
+        <strong>{{ risk_summary.high }}</strong>
+        <span>高风险任务</span>
+        <small>优先跟踪、优先补材料</small>
+      </div>
+      <div class="warning-card alt">
+        <strong>{{ risk_summary.mid }}</strong>
+        <span>中风险任务</span>
+        <small>建议增加里程碑检查频率</small>
+      </div>
+      <div class="warning-card alt">
+        <strong>{{ risk_summary.low }}</strong>
+        <span>低风险任务</span>
+        <small>整体节奏稳定</small>
+      </div>
+    </div>
+    <div class="stacked-blocks">
+      {% for item in risk_profiles %}
+        <div class="stack-block">
+          <h4>{{ item.student_name }} · {{ item.project_title }}</h4>
+          <p>{{ item.risk_level }} · 风险分 {{ item.risk_score }} · 进度 {{ item.progress }}%</p>
+          <p>{{ item.rule_hits|join(' / ') }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="practice-actions">
+  <article class="panel form-panel">
+    <div class="panel-heading">
+      <h3>实验室预约</h3>
+      <p>支持项目与实验室联动，适合现场展示名额控制和预约留痕。</p>
+    </div>
+    <form method="post" action="{{ url_for('practice_book_lab') }}" class="stack-form">
+      <input type="hidden" name="student_id" value="{{ selected_student_id }}">
+      <label>项目
+        <select name="project_id" required>
+          {% for project in projects %}
+            <option value="{{ project.project_id }}">{{ project.project_name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>实验室
+        <select name="room_id" required>
+          {% for room in rooms %}
+            <option value="{{ room.room_id }}">{{ room.room_name }} · {{ room.room_status }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>日期
+        <input type="date" name="booking_date" value="2026-04-11" required>
+      </label>
+      <label>时段
+        <input type="text" name="time_slot" value="10:00-12:00" required>
+      </label>
+      <button type="submit" class="primary-button">预约实验室</button>
+    </form>
+  </article>
+
+  <article class="panel form-panel">
+    <div class="panel-heading">
+      <h3>签到与周报</h3>
+      <p>把过程性考核数据做成可追踪、可审计、可归档。</p>
+    </div>
+    <form method="post" action="{{ url_for('practice_sign') }}" class="stack-form split-form">
+      <input type="hidden" name="student_id" value="{{ selected_student_id }}">
+      <label>实践任务
+        <select name="task_id" required>
+          {% for task in tasks %}
+            <option value="{{ task.task_id }}">{{ task.student_name }} · {{ task.project_title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>签到地点
+        <input type="text" name="location" value="实验中心 101" required>
+      </label>
+      <button type="submit" class="secondary-button">执行签到</button>
+    </form>
+    <form method="post" action="{{ url_for('practice_report') }}" class="stack-form">
+      <input type="hidden" name="student_id" value="{{ selected_student_id }}">
+      <label>实践任务
+        <select name="task_id" required>
+          {% for task in tasks %}
+            <option value="{{ task.task_id }}">{{ task.student_name }} · {{ task.project_title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>周次
+        <input type="number" min="1" max="20" name="week_no" value="4" required>
+      </label>
+      <label>周报内容
+        <textarea name="content" rows="5" required>本周完成业务流程梳理、数据字典补充与演示页面联调，下一步将继续优化缓存刷新逻辑。</textarea>
+      </label>
+      <button type="submit" class="primary-button">提交周报</button>
+    </form>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="practice-progress">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>实践任务进度</h3>
+      <p>任务与项目进度统一可视，用于观察过程管理状态。</p>
+    </div>
+    <div class="progress-list">
+      {% for task in tasks %}
+        <div class="progress-row">
+          <div class="progress-copy">
+            <strong>{{ task.student_name }} · {{ task.project_title }}</strong>
+            <span>{{ task.base_name }} · {{ task.mentor_name }} · 周报 {{ task.weekly_count }} 份</span>
+          </div>
+          <div class="progress-bar"><span style="width: {{ task.progress }}%"></span></div>
+          <em>{{ task.progress }}%</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>已预约实验室</h3>
+      <p>实验室资源配置与实践项目进度关联展示。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>学生</th><th>实验室</th><th>项目</th><th>时间</th></tr>
+        </thead>
+        <tbody>
+          {% for row in bookings %}
+            <tr>
+              <td>{{ row.student_name }}</td>
+              <td>{{ row.room_name }}</td>
+              <td>{{ row.project_name }}</td>
+              <td>{{ row.booking_date }} {{ row.time_slot }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="practice-logs">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>签到与周报记录</h3>
+      <p>左边看签到，右边看关系库中索引后的周报记录。</p>
+    </div>
+    <div class="log-columns">
+      <div>
+        <h4>签到记录</h4>
+        {% for item in attendance %}
+          <div class="mini-log">
+            <strong>{{ item.student_name }}</strong>
+            <span>{{ item.location }}</span>
+            <small>{{ item.sign_time }}</small>
+          </div>
+        {% endfor %}
+      </div>
+      <div>
+        <h4>周报记录</h4>
+        {% for item in reports %}
+          <div class="mini-log">
+            <strong>{{ item.student_name }} · 第 {{ item.week_no }} 周</strong>
+            <span>{{ item.content }}</span>
+            <small>{{ item.created_at }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 周报与导师评价</h3>
+      <p>突出半结构化正文和自由文本评语的管理价值。</p>
+    </div>
+    <div class="log-columns">
+      <div>
+        <h4>文档型周报</h4>
+        {% for item in mongo_reports %}
+          <div class="mini-log">
+            <strong>{{ item.studentName }} · {{ item.weekNo }}</strong>
+            <span>{{ item.content }}</span>
+            <small>{{ item.createdAt }}</small>
+          </div>
+        {% endfor %}
+      </div>
+      <div>
+        <h4>导师评语</h4>
+        {% for item in mongo_comments %}
+          <div class="mini-log">
+            <strong>{{ item.studentName }}</strong>
+            <span>{{ item.comment }}</span>
+            <small>{{ item.createdAt }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="practice-mongo-risk">
+  <div class="panel-heading">
+    <h3>Mongo 实践风险画像快照</h3>
+    <p>风险画像也已写入 Mongo 集合，说明系统不只是页面展示，而是保留了可追踪的过程预警文档。</p>
+  </div>
+  <div class="warning-grid">
+    {% for item in mongo_risks %}
+      <div class="warning-card {% if item.riskLevel == '高风险' %}{% else %}alt{% endif %}">
+        <strong>{{ item.studentName }}</strong>
+        <span>{{ item.projectTitle }}</span>
+        <small>{{ item.riskLevel }} · 风险分 {{ item.riskScore }}</small>
+        <small>{{ item.ruleHitList|join(' / ') }}</small>
+      </div>
+    {% else %}
+      <p class="empty-state">当前暂无 Mongo 风险画像快照。</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

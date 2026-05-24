@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block title %}数据中心 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="数据中心页导航">
+  <a href="#data-scope">观测范围</a>
+  <a href="#data-governance">治理摘要</a>
+  <a href="#data-redis">Redis 键空间</a>
+  <a href="#data-mongo">Mongo 能力</a>
+  <a href="#data-graph">图谱快照</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="subsystem-hero data-tone">
+  <div>
+    <p class="eyebrow">Data Center</p>
+    <h2>多数据库协同观测台</h2>
+    <p>这一页用于集中观察数据落点、分层方式和各类数据库中的实际内容。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">SQL 统计口径</span>
+    <span class="pill">Redis 键快照</span>
+    <span class="pill">Mongo 文档集合</span>
+    <span class="pill">图谱扩展</span>
+    <span class="pill {% if redis_runtime.mode == 'real' %}pill-good{% else %}pill-warn{% endif %}">{{ redis_runtime.status_label }}</span>
+    <span class="pill {% if mongo_runtime.mode == 'real' %}pill-good{% else %}pill-warn{% endif %}">{{ mongo_runtime.status_label }}</span>
+  </div>
+</section>
+
+<section class="section-grid three-up">
+  {% for item in sql_summary %}
+    <article class="feature-card stat-panel">
+      <h3>{{ item.count }}</h3>
+      <p>{{ item.name }}</p>
+    </article>
+  {% endfor %}
+</section>
+
+<section class="insight-strip">
+  <article class="insight-card">
+    <span>Redis 键数量</span>
+    <strong>{{ redis_keys|length }}</strong>
+    <small>覆盖排行、配额、进度和状态摘要</small>
+  </article>
+  <article class="insight-card">
+    <span>Mongo 集合数</span>
+    <strong>{{ mongo_collections|length }}</strong>
+    <small>含日志、画像、风险、GridFS 等集合</small>
+  </article>
+  <article class="insight-card">
+    <span>治理得分</span>
+    <strong>{{ governance_teaser.quality_score }}</strong>
+    <small>当前主数据综合质量评分</small>
+  </article>
+  <article class="insight-card">
+    <span>图谱节点</span>
+    <strong>{{ graph_snapshot.node_count }}</strong>
+    <small>当前统一图模型中的节点数量</small>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="data-scope">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>数据观测范围</h3>
+      <p>页面按事务层、缓存层、文档层和图谱分析结果组织，便于查看各类数据的实际落点。</p>
+    </div>
+    <div class="route-list">
+      <span class="step-pill">1. SQL 统计摘要展示核心业务数据规模。</span>
+      <span class="step-pill">2. Redis 键空间展示排行榜、配额和状态缓存。</span>
+      <span class="step-pill">3. Mongo 文档集合展示日志、画像和过程材料。</span>
+      <span class="step-pill">4. 治理摘要展示主数据与质量快照。</span>
+      <span class="step-pill">5. 图数据库快照展示节点、关系与推荐结果。</span>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>分析模块概览</h3>
+      <p>系统在业务处理之外，还提供排行、治理和图谱三类分析视图。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>多粒度排行榜体系</h4>
+        <p>图书馆新增日榜、周榜、月榜、总榜和分类榜，教务、实践也增加跨系统排行。</p>
+      </div>
+      <div class="stack-block">
+        <h4>数据治理视角</h4>
+        <p>主数据目录、质量规则、评分维度和血缘链路已进入系统，而不是只写在报告里。</p>
+      </div>
+      <div class="stack-block">
+        <h4>图谱扩展视角</h4>
+        <p>在原有三子系统基础上增加图关系、推荐路径和中心性分析，让项目更有延展性。</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="data-governance">
+  <div class="panel-heading">
+    <h3>数据治理摘要</h3>
+    <p>这一块集中展示主数据管理和数据质量治理的整体状态。</p>
+  </div>
+  <div class="warning-grid">
+    <div class="warning-card alt">
+      <strong>{{ governance_teaser.quality_score }}</strong>
+      <span>主数据综合质量分</span>
+      <small>评级：{{ governance_teaser.quality_label }}</small>
+    </div>
+    <div class="warning-card">
+      <strong>{{ governance_teaser.master_entity_count }}</strong>
+      <span>核心主数据实体</span>
+      <small>学生、教师、课程、图书、空间</small>
+    </div>
+    <div class="warning-card alt">
+      <strong>{{ governance_teaser.master_record_count }}</strong>
+      <span>治理覆盖记录量</span>
+      <small>含 SQL 主数据与 Mongo Geo 空间</small>
+    </div>
+    <div class="warning-card">
+      <strong>{{ governance_teaser.snapshot_at }}</strong>
+      <span>质量快照生成时间</span>
+      <small>已同步写入 MongoDB</small>
+    </div>
+  </div>
+  <a href="{{ url_for('governance_lab') }}" class="secondary-button">进入数据治理实验室</a>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>跨库一致性策略</h3>
+      <p>系统在跨 SQLite、Redis 和 MongoDB 写入时，优先保证事务层正确，再同步刷新缓存与文档留痕。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>事务主库优先</h4>
+        <p>借阅、选课、预约等核心写操作先落到 SQLite，确保库存、容量和资源占用等关键状态正确。</p>
+      </div>
+      <div class="stack-block">
+        <h4>缓存与文档后续同步</h4>
+        <p>事务成功后再更新 Redis 排行榜、配额摘要，并写入 MongoDB 行为日志、变更记录和画像文档。</p>
+      </div>
+      <div class="stack-block">
+        <h4>补偿与重建</h4>
+        <p>系统保留从事务数据重建 Redis 排行和摘要的能力，适合解释最终一致性与缓存补偿策略。</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>数据分层与并发扩展</h3>
+      <p>除了当前演示结构，系统也预留了面向更大数据量和更高并发场景的演进方向。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>冷热数据分层</h4>
+        <p>Redis 保存日常热点数据，MongoDB 保存近阶段过程文档，历史日志可继续归档到 HDFS 或对象存储。</p>
+      </div>
+      <div class="stack-block">
+        <h4>消息队列削峰</h4>
+        <p>在抢课等高并发场景中，可在 Web 层和事务层之间增加 Kafka 或 RabbitMQ，对请求进行排队与限速消费。</p>
+      </div>
+      <div class="stack-block">
+        <h4>统一观测入口</h4>
+        <p>数据中心集中展示 SQL、Redis、Mongo 和图谱结果，便于观察分层后的实际数据落点与运行状态。</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h3>排行榜键策略看板</h3>
+    <p>观察窗口：{{ rank_reference }}。这里集中展示多个 Redis Key 的组织方式、过期策略和更新节奏。</p>
+  </div>
+  <div class="catalog-grid">
+    {% for item in leaderboard_catalog %}
+      <article class="catalog-card">
+        <strong>{{ item.scope }}</strong>
+        <code>{{ item.key }}</code>
+        <p>{{ item.note }}</p>
+        <small>过期策略：{{ item.ttl }}</small>
+        <small>更新时机：{{ item.trigger }}</small>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>活跃图书榜单快照</h3>
+      <p>图书借阅事件会同步进入多个时间窗口，形成不同粒度的热度快照。</p>
+    </div>
+    <div class="leaderboard-deck compact">
+      {% for board in rank_boards %}
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>{{ board.title }}</h4>
+              <p>{{ board.subtitle }}</p>
+            </div>
+            <span class="pill">{{ board.ttl_label }}</span>
+          </div>
+          <code class="board-key">{{ board.key }}</code>
+          <div class="rank-bar-list">
+            {% for item in board.entries %}
+              <div class="rank-bar-row slim">
+                <div class="rank-copy">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.category }}</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: {{ item.bar_width }}%"></span>
+                </div>
+                <em>{{ item.score }}</em>
+              </div>
+            {% else %}
+              <p class="empty-state">暂无数据</p>
+            {% endfor %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>跨系统扩展排行</h3>
+      <p>除图书馆外，教务和实践平台也都补上了可讲解的数据榜单。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>课程热选榜</h4>
+        <div class="rank-bar-list">
+          {% for item in course_rankings %}
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.subline }}</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: {{ item.bar_width }}%"></span>
+              </div>
+              <em>{{ item.meta }}</em>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="stack-block">
+        <h4>任务推进榜</h4>
+        <div class="rank-bar-list">
+          {% for item in practice_rankings %}
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.subline }}</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: {{ item.bar_width }}%"></span>
+              </div>
+              <em>{{ item.score }}%</em>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="stack-block">
+        <h4>实验室利用榜</h4>
+        <div class="rank-bar-list">
+          {% for item in lab_rankings %}
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.subline }}</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: {{ item.bar_width }}%"></span>
+              </div>
+              <em>{{ item.meta }}</em>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="data-redis">
+  <div class="panel-heading">
+    <h3>Redis 键空间</h3>
+    <p>缓存、排行榜、配额、令牌、进度摘要都可以直接被观察。</p>
+  </div>
+  <div class="key-grid">
+    {% for item in redis_keys %}
+      <article class="key-card">
+        <span class="pill">{{ item.type }}</span>
+        <strong>{{ item.key }}</strong>
+        <p>{{ item.preview }}</p>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel" id="data-mongo">
+  <div class="panel-heading">
+    <h3>Mongo 文档集合</h3>
+    <p>展示行为日志、变更日志、学业预警画像、实践风险画像、周报正文和导师评语，帮助说明文档型数据库的必要性。</p>
+  </div>
+  <div class="mongo-grid">
+    {% for collection in mongo_collections %}
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>{{ collection.name }}</strong>
+          <span>{{ collection.count }} 条</span>
+        </div>
+        {% for item in collection.recent %}
+          <div class="mongo-item">
+            <code>{{ item._id }}</code>
+            <p>{{ item }}</p>
+          </div>
+        {% endfor %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 创新能力看板</h3>
+      <p>这里汇总 Capped、TTL、Geo、GridFS 和 Schema Validator 等 Mongo 能力在系统中的使用情况。</p>
+    </div>
+    <div class="catalog-grid">
+      {% for item in mongo_feature_catalog %}
+        <article class="catalog-card">
+          <strong>{{ item.name }}</strong>
+          <p>文档数：{{ item.count }}</p>
+          <small>集合类型：{% if item.capped %}Capped{% else %}普通集合{% endif %}</small>
+          <small>校验器：{{ item.validator }}</small>
+          <small>索引：{{ item.indexes|join(' / ') }}</small>
+          <small>TTL：{{ item.ttl_indexes|join(' / ') if item.ttl_indexes else '无' }}</small>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 实时事件流</h3>
+      <p>该集合使用 Capped 模式，适合演示系统事件流与固定窗口日志。</p>
+    </div>
+    <div class="timeline">
+      {% for item in mongo_event_feed %}
+        <div class="timeline-item">
+          <strong>{{ item.eventType }}</strong>
+          <span>{{ item.message }}</span>
+          <small>{{ item.createdAt }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="data-graph">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo TTL 与地理空间示例</h3>
+      <p>左侧展示 TTL 搜索缓存，右侧展示 2dsphere 索引下的校园空间近邻查询。</p>
+    </div>
+    <div class="log-columns">
+      <div>
+        <h4>TTL 搜索缓存（当前 {{ mongo_search_cache['count'] }} 条）</h4>
+        {% for item in mongo_search_cache['recent'] %}
+          <div class="mini-log">
+            <strong>{{ item.keyword }}</strong>
+            <span>{{ item.source }}</span>
+            <small>失效时间：{{ item.expireAt }}</small>
+          </div>
+        {% endfor %}
+      </div>
+      <div>
+        <h4>地理近邻查询：{{ mongo_geo_preview['anchor'] }}</h4>
+        {% for item in mongo_geo_preview['items'] %}
+          <div class="mini-log">
+            <strong>{{ item.spaceName }}</strong>
+            <span>{{ item.spaceType }} · {{ item.building }}</span>
+            <small>{{ item.location.coordinates }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>GridFS 演示资产</h3>
+      <p>系统已把演示截图同步到 GridFS，可作为“文件型文档数据”的创新点写进报告。</p>
+    </div>
+    <div class="timeline">
+      {% for item in mongo_gridfs_files %}
+        <div class="timeline-item">
+          <strong>{{ item.filename }}</strong>
+          <span>{{ item.metadata.sourcePath }}</span>
+          <small>{{ item.length }} bytes · {{ item.uploadDate }}</small>
+        </div>
+      {% else %}
+        <p class="empty-state">当前尚未写入 GridFS 文件。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 聚合管道示例</h3>
+      <p>使用 `$group` 和 `$sort` 直接统计行为结构，能明显体现文档数据库不仅存文档，也能做轻量分析。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in mongo_aggregation['library_actions'] %}
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>{{ item.name }}</strong>
+            <span>图书馆行为次数</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.count * 24 if item.count * 24 < 100 else 100 }}%"></span>
+          </div>
+          <em>{{ item.count }}</em>
+        </div>
+      {% else %}
+        <p class="empty-state">当前暂无聚合样例。</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>聚合结果与管道设计</h3>
+      <p>这一块适合写进报告“MongoDB 创新点”，把集合、字段和聚合阶段讲清楚。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>空间类型分布</h4>
+        {% for item in mongo_aggregation['space_types'] %}
+          <p><strong>{{ item.name }}</strong>：{{ item.count }} 个空间</p>
+        {% else %}
+          <p class="empty-state">暂无空间类型数据。</p>
+        {% endfor %}
+      </div>
+      <div class="stack-block">
+        <h4>事件流类型</h4>
+        {% for item in mongo_aggregation['event_types'] %}
+          <p><strong>{{ item.name }}</strong>：{{ item.count }} 次事件</p>
+        {% else %}
+          <p class="empty-state">暂无事件流数据。</p>
+        {% endfor %}
+      </div>
+      <div class="stack-block">
+        <h4>聚合管道</h4>
+        {% for item in mongo_aggregation['pipelines'] %}
+          <p><strong>{{ item.title }}</strong>：{{ item.stages }} · {{ item.target }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图数据库扩展快照</h3>
+      <p>将三大子系统抽象成统一图模型后，可直接展示节点类型和关系类型分布。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in graph_snapshot.node_summary[:6] %}
+        <div class="warning-card alt">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.count }} 个节点</span>
+          <small>节点总量 {{ graph_snapshot.node_count }}</small>
+        </div>
+      {% endfor %}
+      {% for item in graph_snapshot.edge_summary[:4] %}
+        <div class="warning-card">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.count }} 条关系</span>
+          <small>关系总量 {{ graph_snapshot.edge_count }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Cypher 导出与推荐结果</h3>
+      <p>项目会自动导出可导入 Neo4j 的 Cypher 文件，并生成基于多跳路径的推荐结果。</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <strong>Cypher 文件</strong>
+        <span>{{ graph_snapshot.cypher_path }}</span>
+      </div>
+      {% for item in graph_snapshot.course_recommendations[:3] %}
+        <div class="timeline-item">
+          <strong>{{ item.name }}</strong>
+          <span>{{ item.support }}</span>
+          <small>{{ item.path }}</small>
+        </div>
+      {% else %}
+        <p class="empty-state">当前暂无课程推荐结果。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

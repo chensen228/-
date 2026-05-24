@@ -1,0 +1,9 @@
+[
+  {
+    "eventType": "system.bootstrap",
+    "message": "已初始化 Mongo 创新集合：Capped、TTL、Geo、GridFS。",
+    "context": {},
+    "_id": "realtime_event_feed-0001",
+    "createdAt": "2026-05-24 15:24:53"
+  }
+]

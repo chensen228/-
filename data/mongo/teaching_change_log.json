@@ -1,0 +1,11 @@
+[
+  {
+    "operator": "教务秘书",
+    "changeType": "容量调整",
+    "target": "大数据管理",
+    "beforeValue": 70,
+    "afterValue": 80,
+    "_id": "teaching_change_log-0001",
+    "createdAt": "2026-04-07 09:21:42"
+  }
+]

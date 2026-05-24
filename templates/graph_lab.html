@@ -1,0 +1,557 @@
+{% extends "base.html" %}
+
+{% block title %}图谱创新 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="图谱页导航">
+  <a href="#graph-student">分析学生</a>
+  <a href="#graph-network">交互图谱</a>
+  <a href="#graph-summary">图模型摘要</a>
+  <a href="#graph-recommendation">推荐与路径</a>
+  <a href="#graph-cypher">Cypher 范例</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<script type="text/javascript" src="{{ url_for('static', filename='vendor/vis-network.min.js') }}"></script>
+<section class="subsystem-hero data-tone">
+  <div>
+    <p class="eyebrow">Graph Innovation</p>
+    <h2>图数据库扩展实验室</h2>
+    <p>把智慧校园中的“学生-课程-教师”“读者-图书-类别”“学生-任务-实验室”关系抽象成图模型，用图查询和多跳路径展示为什么这些场景适合图数据库。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">图运行时：{{ graph_runtime.status_label }}</span>
+    <span class="pill">节点数：{{ node_count }}</span>
+    <span class="pill">关系数：{{ edge_count }}</span>
+    <span class="pill">Cypher 导出：{{ cypher_name }}</span>
+  </div>
+</section>
+
+<section class="panel" id="graph-student">
+  <div class="panel-heading">
+    <h3>当前分析学生</h3>
+    <p>切换不同学生，可观察课程推荐、图书推荐和多跳关系路径如何变化。</p>
+  </div>
+  <form method="get" action="{{ url_for('graph_lab') }}" class="inline-form">
+    <select name="student_id">
+      {% for student in students %}
+        <option value="{{ student.student_id }}" {% if student.student_id == selected_student_id %}selected{% endif %}>{{ student.student_name }} · {{ student.major }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="secondary-button">切换图谱视角</button>
+  </form>
+</section>
+
+<section class="panel" id="graph-network">
+  <div class="panel-heading">
+    <h3>图谱动态交互可视化 (Vis.js)</h3>
+    <p>你可以用鼠标随意拖拽、放大、缩小下方的图谱节点。每个不同颜色的节点代表不同类型的实体（学生、课程、教师等）。</p>
+  </div>
+  <div class="graph-toolbar">
+    <div class="graph-toolbar-group">
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="fit">适配全图</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="focus-student">聚焦当前学生</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="toggle-physics">关闭布局</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="toggle-edge-labels">隐藏关系标签</button>
+    </div>
+    <div class="graph-toolbar-group graph-toolbar-search">
+      <label class="graph-search-field">
+        <span>定位节点</span>
+        <input id="graph-search" type="search" placeholder="输入学生、课程、教师或图书名">
+      </label>
+      <button type="button" class="secondary-button graph-tool-button" data-graph-action="search-node">定位</button>
+      <button type="button" class="secondary-button graph-tool-button" data-graph-action="clear-selection">清除高亮</button>
+    </div>
+  </div>
+  <div class="graph-layout">
+    <div class="graph-stage">
+      <div id="mynetwork" class="graph-canvas" role="img" aria-label="校园图谱网络图"></div>
+      <div class="route-list graph-help-strip">
+        <span class="step-pill">拖拽节点可观察局部关系，滚轮缩放可查看密集结构。</span>
+        <span class="step-pill">聚焦当前学生后，适合直接讲课程推荐、图书推荐和多跳路径。</span>
+      </div>
+    </div>
+    <aside class="graph-aside">
+      <article class="graph-side-card">
+        <div class="graph-side-head">
+          <h4>当前焦点</h4>
+          <span class="pill pill-good">{{ selected_student_name }} · {{ selected_student_major }}</span>
+        </div>
+        <div id="graph-selection" class="graph-selection-card">
+          <strong>{{ selected_student_name }}</strong>
+          <span>默认分析学生</span>
+          <small>页面加载后会优先聚焦该学生。点击节点可查看实体属性，点击关系可查看边类型与连接方向。</small>
+        </div>
+      </article>
+      <article class="graph-side-card">
+        <div class="graph-side-head">
+          <h4>图例与导出</h4>
+          <button
+            type="button"
+            class="secondary-button graph-tool-button compact"
+            data-copy-text="{{ cypher_path }}"
+            data-copy-success="路径已复制"
+          >复制 Cypher 路径</button>
+        </div>
+        <div class="graph-legend-list">
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#3b82f6;border-color:#2563eb;"></span><span>Student 学生</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#10b981;border-color:#059669;"></span><span>Course 课程</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#8b5cf6;border-color:#7c3aed;"></span><span>Teacher 教师</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#f59e0b;border-color:#d97706;"></span><span>Book 图书</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#ef4444;border-color:#dc2626;"></span><span>Category 分类</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#ec4899;border-color:#db2777;"></span><span>Task 实践任务</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#06b6d4;border-color:#0891b2;"></span><span>LabRoom 实验室</span></div>
+        </div>
+        <div class="graph-export-note">
+          <strong>{{ cypher_name }}</strong>
+          <small>{{ graph_runtime.status_label }}</small>
+        </div>
+      </article>
+    </aside>
+  </div>
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        var rawData = {{ network_data | tojson | safe }};
+        var selectedStudentNodeId = {{ selected_student_node_id | tojson }};
+        var container = document.getElementById('mynetwork');
+        var selectionPanel = document.getElementById('graph-selection');
+        var searchInput = document.getElementById('graph-search');
+        if (!container || !selectionPanel || !searchInput || typeof vis === 'undefined') {
+            if (selectionPanel) {
+                selectionPanel.innerHTML = '<strong>图谱资源未就绪</strong><span>请刷新页面后重试。</span><small>当前未能加载 Vis.js 或目标容器。</small>';
+            }
+            return;
+        }
+        if (!rawData.nodes || !rawData.nodes.length) {
+            selectionPanel.innerHTML = '<strong>暂无图谱数据</strong><span>当前没有可展示的节点。</span><small>请先检查图谱数据生成流程。</small>';
+            return;
+        }
+        var baseNodes = rawData.nodes.map(function(node) { return Object.assign({}, node); });
+        var baseEdges = rawData.edges.map(function(edge) { return Object.assign({}, edge); });
+        var nodeIndex = new Map(baseNodes.map(function(node) { return [node.id, node]; }));
+        var edgeIndex = new Map(baseEdges.map(function(edge) { return [edge.id, edge]; }));
+        var hiddenNodeIds = new Set();
+        var labelsVisible = true;
+        var physicsEnabled = true;
+
+        var data = {
+            nodes: new vis.DataSet(baseNodes),
+            edges: new vis.DataSet(baseEdges)
+        };
+        var options = {
+            nodes: {
+                shape: 'dot',
+                size: 16,
+                font: { size: 12, color: '#334155', face: 'system-ui' },
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                width: 1,
+                color: { inherit: 'from', opacity: 0.6 },
+                smooth: { type: 'continuous' },
+                font: { size: 10, color: '#64748b', align: 'middle' }
+            },
+            physics: {
+                forceAtlas2Based: {
+                    gravitationalConstant: -26,
+                    centralGravity: 0.005,
+                    springLength: 230,
+                    springConstant: 0.18
+                },
+                maxVelocity: 146,
+                solver: 'forceAtlas2Based',
+                timestep: 0.35,
+                stabilization: { iterations: 150 }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200,
+                hideEdgesOnDrag: true
+            },
+            groups: {
+                Student: { color: { background: '#3b82f6', border: '#2563eb' } },
+                Course: { color: { background: '#10b981', border: '#059669' } },
+                Teacher: { color: { background: '#8b5cf6', border: '#7c3aed' } },
+                Book: { color: { background: '#f59e0b', border: '#d97706' } },
+                Category: { color: { background: '#ef4444', border: '#dc2626' } },
+                Task: { color: { background: '#ec4899', border: '#db2777' } },
+                LabRoom: { color: { background: '#06b6d4', border: '#0891b2' } }
+            }
+        };
+        var network = new vis.Network(container, data, options);
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, function(character) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[character];
+            });
+        }
+
+        function setSelectionContent(title, subtitle, details, connectedCount) {
+            var detailLines = (details || []).map(function(item) {
+                return '<li><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.value) + '</span></li>';
+            }).join('');
+            selectionPanel.innerHTML = [
+                '<strong>' + escapeHtml(title) + '</strong>',
+                '<span>' + escapeHtml(subtitle) + '</span>',
+                '<small>关联节点 ' + escapeHtml(connectedCount) + ' 个</small>',
+                detailLines ? '<ul class="graph-detail-list">' + detailLines + '</ul>' : '<small>当前节点没有额外属性。</small>'
+            ].join('');
+        }
+
+        function renderNodeDetails(nodeId) {
+            var node = nodeIndex.get(nodeId);
+            if (!node) {
+                setSelectionContent('{{ selected_student_name }}', '默认分析学生', [], 0);
+                return;
+            }
+            var details = Object.entries(node.detailMap || {}).map(function(entry) {
+                return { label: entry[0], value: String(entry[1]) };
+            });
+            setSelectionContent(
+                node.label,
+                node.entityLabel || node.group || 'Entity',
+                details,
+                network.getConnectedNodes(nodeId).length
+            );
+        }
+
+        function renderEdgeDetails(edgeId) {
+            var edge = edgeIndex.get(edgeId);
+            if (!edge) {
+                renderNodeDetails(selectedStudentNodeId);
+                return;
+            }
+            var fromNode = nodeIndex.get(edge.from);
+            var toNode = nodeIndex.get(edge.to);
+            var details = [
+                { label: '起点节点', value: fromNode ? fromNode.label : edge.from },
+                { label: '终点节点', value: toNode ? toNode.label : edge.to }
+            ];
+            Object.entries(edge.detailMap || {}).forEach(function(entry) {
+                details.push({ label: entry[0], value: String(entry[1]) });
+            });
+            setSelectionContent(
+                edge.relationType || '关系',
+                (fromNode ? fromNode.label : edge.from) + ' -> ' + (toNode ? toNode.label : edge.to),
+                details,
+                2
+            );
+        }
+
+        function focusNode(nodeId) {
+            if (!nodeIndex.has(nodeId)) {
+                return;
+            }
+            network.selectNodes([nodeId]);
+            network.focus(nodeId, {
+                scale: 1.05,
+                animation: { duration: 500, easingFunction: 'easeInOutQuad' }
+            });
+            renderNodeDetails(nodeId);
+        }
+
+        function resetVisibility() {
+            hiddenNodeIds.clear();
+            data.nodes.update(baseNodes.map(function(node) {
+                return { id: node.id, hidden: false };
+            }));
+            data.edges.update(baseEdges.map(function(edge) {
+                return { id: edge.id, hidden: false, label: labelsVisible ? edge.relationType : '' };
+            }));
+        }
+
+        function searchAndFocus() {
+            var keyword = (searchInput.value || '').trim().toLowerCase();
+            if (!keyword) {
+                focusNode(selectedStudentNodeId);
+                return;
+            }
+            var matchedNode = baseNodes.find(function(node) {
+                return (node.searchText || '').indexOf(keyword) !== -1;
+            });
+            if (!matchedNode) {
+                setSelectionContent('未找到匹配节点', '请尝试输入学生、课程、教师或图书名中的关键词。', [], 0);
+                return;
+            }
+            resetVisibility();
+            var visibleIds = new Set([matchedNode.id].concat(network.getConnectedNodes(matchedNode.id)));
+            hiddenNodeIds = new Set(baseNodes.filter(function(node) {
+                return !visibleIds.has(node.id);
+            }).map(function(node) {
+                return node.id;
+            }));
+            data.nodes.update(baseNodes.map(function(node) {
+                return { id: node.id, hidden: hiddenNodeIds.has(node.id) };
+            }));
+            data.edges.update(baseEdges.map(function(edge) {
+                var visible = visibleIds.has(edge.from) && visibleIds.has(edge.to);
+                return { id: edge.id, hidden: !visible, label: labelsVisible && visible ? edge.relationType : '' };
+            }));
+            focusNode(matchedNode.id);
+        }
+
+        network.on('click', function(params) {
+            if (params.nodes.length) {
+                renderNodeDetails(params.nodes[0]);
+            } else if (params.edges.length) {
+                renderEdgeDetails(params.edges[0]);
+            } else {
+                network.unselectAll();
+                renderNodeDetails(selectedStudentNodeId);
+            }
+        });
+
+        document.querySelectorAll('[data-graph-action]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var action = button.getAttribute('data-graph-action');
+                if (action === 'fit') {
+                    resetVisibility();
+                    network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+                } else if (action === 'focus-student') {
+                    resetVisibility();
+                    focusNode(selectedStudentNodeId);
+                } else if (action === 'toggle-physics') {
+                    physicsEnabled = !physicsEnabled;
+                    network.setOptions({ physics: { enabled: physicsEnabled } });
+                    button.textContent = physicsEnabled ? '关闭布局' : '恢复布局';
+                } else if (action === 'toggle-edge-labels') {
+                    labelsVisible = !labelsVisible;
+                    data.edges.update(baseEdges.map(function(edge) {
+                        return { id: edge.id, label: labelsVisible && !hiddenNodeIds.has(edge.from) && !hiddenNodeIds.has(edge.to) ? edge.relationType : '' };
+                    }));
+                    button.textContent = labelsVisible ? '隐藏关系标签' : '显示关系标签';
+                } else if (action === 'search-node') {
+                    searchAndFocus();
+                } else if (action === 'clear-selection') {
+                    searchInput.value = '';
+                    resetVisibility();
+                    network.unselectAll();
+                    focusNode(selectedStudentNodeId);
+                }
+            });
+        });
+
+        searchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchAndFocus();
+            }
+        });
+
+        network.once('stabilizationIterationsDone', function() {
+            focusNode(selectedStudentNodeId);
+        });
+    });
+  </script>
+</section>
+
+<section class="section-grid two-up" id="graph-summary">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>节点类型分布</h3>
+      <p>这部分对应图数据库中的顶点类型设计，用于观察图模型的实体边界。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in node_summary %}
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>{{ item.label }}</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ (item.count / node_count * 100) if node_count else 0 }}%"></span>
+          </div>
+          <em>{{ item.count }}</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>关系类型分布</h3>
+      <p>这里能说明为什么图数据库擅长多对多和多跳查询，不需要像关系库那样反复 Join。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in edge_summary %}
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>{{ item.label }}</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ (item.count / edge_count * 100) if edge_count else 0 }}%"></span>
+          </div>
+          <em>{{ item.count }}</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="graph-recommendation">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图谱课程推荐</h3>
+      <p>基于“学生-课程-学生-课程”的多跳路径生成推荐，这是图数据库最容易讲出优势的场景。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in course_recommendations %}
+        <div class="warning-card alt">
+          <strong>{{ item.name }}</strong>
+          <span>支持度 {{ item.score }}</span>
+          <small>相似学生：{{ item.support }}</small>
+          <small>{{ item.path }}</small>
+        </div>
+      {% else %}
+        <p class="empty-state">当前学生暂无可展示的课程推荐路径。</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图谱图书推荐</h3>
+      <p>把借阅行为和分类边连接起来，可自然演示“读者-图书-类别”图模型。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in book_recommendations %}
+        <div class="warning-card">
+          <strong>{{ item.name }}</strong>
+          <span>{{ item.category }}</span>
+          <small>同类借阅热度 {{ item.score }}</small>
+        </div>
+      {% else %}
+        <p class="empty-state">当前学生暂无可展示的图书推荐结果。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>多跳路径展示</h3>
+      <p>这里展示学生、课程、图书和实践任务之间的多跳关系路径。</p>
+    </div>
+    <div class="timeline">
+      {% for item in path_showcase %}
+        <div class="timeline-item">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.detail }}</span>
+        </div>
+      {% else %}
+        <p class="empty-state">当前暂无路径样例。</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>PageRank 中心性</h3>
+      <p>相比只看度数，这里更接近图算法口径，能说明哪些节点在关系传播里更关键。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in centrality_ranking %}
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>{{ item.name }}</strong>
+            <span>{{ item.label }} · 度数 {{ item.degree }}</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.score * 1600 if item.score * 1600 < 100 else 100 }}%"></span>
+          </div>
+          <em>{{ item.score }}</em>
+        </div>
+      {% else %}
+        <p class="empty-state">当前暂无中心性结果。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h3>跨子系统关联最强学生</h3>
+    <p>把教务、图书馆、实践三类关系叠加后，可以快速找出最适合做推荐、画像或预警分析的学生。</p>
+  </div>
+  <div class="warning-grid">
+    {% for item in student_link_index %}
+      <div class="warning-card alt">
+        <strong>{{ item.name }}</strong>
+        <span>{{ item.student_no }}</span>
+        <small>覆盖子系统 {{ item.domains }} 个</small>
+        <small>教务 {{ item.academic_links }} · 图书 {{ item.library_links }} · 实践 {{ item.practice_links }} · 综合分 {{ item.score }}</small>
+      </div>
+    {% else %}
+      <p class="empty-state">当前暂无跨系统关联样例。</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel" id="graph-cypher">
+  <div class="panel-heading">
+    <h3>Cypher 查询范例</h3>
+    <p>系统会自动导出可执行的 Cypher 脚本，以下语句用于展示图模型中的典型查询方式。</p>
+  </div>
+  <div class="stacked-blocks">
+    {% for query in cypher_examples %}
+      <div class="stack-block">
+        <code>{{ query }}</code>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>当前图谱运行方式</h3>
+      <p>图谱模块默认采用本地图分析与 Cypher 导出双轨模式，便于在单机环境中直接运行。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>本地图分析</h4>
+        <p>当前页面使用本地图模型完成推荐、路径分析和中心性计算，不依赖外部图数据库即可展示关系逻辑。</p>
+      </div>
+      <div class="stack-block">
+        <h4>Cypher 导出</h4>
+        <p>系统会自动生成 `{{ cypher_name }}`，并支持在上方一键复制导出路径，便于后续把相同节点和关系导入 Neo4j。</p>
+      </div>
+      <div class="stack-block">
+        <h4>统一业务键</h4>
+        <p>学生学号、课程编码、图书分类和项目任务等业务键会直接映射到图节点与关系中，减少重复建模成本。</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Neo4j 切换说明</h3>
+      <p>图谱逻辑已经和连接方式解耦，后续如需接入 Neo4j，只需要补充连接配置即可。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>配置入口</h4>
+        <p>系统支持从环境变量或 `neo4j_runtime.json` 读取连接地址、用户名和密码。</p>
+      </div>
+      <div class="stack-block">
+        <h4>切换结果</h4>
+        <p>连接可用时会从本地图分析模式切换到 Neo4j 在线模式，并直接把 Cypher 脚本同步执行到图数据库中。</p>
+      </div>
+      <div class="stack-block">
+        <h4>当前状态</h4>
+        <p>{{ graph_runtime.status_label }}。这种设计适合单机演示，也便于后续迁移到真实图数据库集群。</p>
+      </div>
+    </div>
+  </article>
+</section>
+{% endblock %}

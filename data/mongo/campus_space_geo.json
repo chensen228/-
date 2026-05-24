@@ -1,0 +1,86 @@
+[
+  {
+    "spaceCode": "LIB-3F",
+    "spaceName": "图书馆三楼自习室",
+    "spaceType": "library",
+    "building": "图书馆",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.3971,
+        39.90872
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  },
+  {
+    "spaceCode": "LIB-4F",
+    "spaceName": "图书馆四楼研讨区",
+    "spaceType": "library",
+    "building": "图书馆",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.39735,
+        39.90895
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  },
+  {
+    "spaceCode": "LAB-A",
+    "spaceName": "数据实验室 A",
+    "spaceType": "lab",
+    "building": "实验楼 1",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.3983,
+        39.90918
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  },
+  {
+    "spaceCode": "LAB-COLLAB",
+    "spaceName": "协同创新室",
+    "spaceType": "lab",
+    "building": "实验楼 2",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.39885,
+        39.90942
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  },
+  {
+    "spaceCode": "LAB-SANDBOX",
+    "spaceName": "企业沙盘室",
+    "spaceType": "lab",
+    "building": "经管楼",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.39672,
+        39.90815
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  },
+  {
+    "spaceCode": "CLS-A305",
+    "spaceName": "博学楼 A305",
+    "spaceType": "classroom",
+    "building": "博学楼",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        116.39792,
+        39.90968
+      ]
+    },
+    "updatedAt": "2026-05-24 15:24:53"
+  }
+]

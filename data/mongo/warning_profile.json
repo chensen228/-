@@ -1,0 +1,12 @@
+[
+  {
+    "studentName": "陈晨",
+    "riskType": "成绩预警",
+    "ruleHitList": [
+      "单科不及格",
+      "总评低于 60"
+    ],
+    "_id": "warning_profile-0001",
+    "createdAt": "2026-04-07 09:21:42"
+  }
+]

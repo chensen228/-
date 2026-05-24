@@ -1,0 +1,26 @@
+[
+  {
+    "studentName": "张三",
+    "action": "search_book",
+    "keyword": "Redis",
+    "device": "PC",
+    "_id": "library_behavior_log-0001",
+    "createdAt": "2026-04-07 09:21:42"
+  },
+  {
+    "studentName": "王敏",
+    "action": "borrow_book",
+    "bookTitle": "Python 数据分析实战",
+    "device": "Mobile",
+    "_id": "library_behavior_log-0002",
+    "createdAt": "2026-04-07 09:21:42"
+  },
+  {
+    "studentName": "张三",
+    "action": "borrow_book",
+    "bookTitle": "MongoDB 权威指南",
+    "device": "Web Demo",
+    "_id": "library_behavior_log-0003",
+    "createdAt": "2026-04-07 09:22:59"
+  }
+]

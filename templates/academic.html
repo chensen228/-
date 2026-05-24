@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}智慧教务 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="教务页导航">
+  <a href="#academic-student">学生视角</a>
+  <a href="#academic-rank">热度与容量</a>
+  <a href="#academic-audit">冲突与推荐</a>
+  <a href="#academic-courses">选课与课表</a>
+  <a href="#academic-warnings">画像与留痕</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="subsystem-hero academic-tone">
+  <div>
+    <p class="eyebrow">Subsystem 02</p>
+    <h2>智慧教务系统</h2>
+    <p>覆盖课程供给、学生选课、课表缓存、成绩管理和学业预警，是最能体现“高并发 + 强一致 + 数据治理”的模块。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">MySQL/SQLite: 课程、选课、成绩</span>
+    <span class="pill">Redis: 课程剩余名额、课表缓存</span>
+    <span class="pill">Mongo: 变更留痕、预警画像</span>
+  </div>
+</section>
+
+<section class="panel" id="academic-student">
+  <div class="panel-heading">
+    <h3>当前演示学生</h3>
+    <p>切换不同学生，观察其课表、成绩与预警状态。</p>
+  </div>
+  <form method="get" action="{{ url_for('academic') }}" class="inline-form">
+    <select name="student_id">
+      {% for student in students %}
+        <option value="{{ student.student_id }}" {% if student.student_id == selected_student_id %}selected{% endif %}>{{ student.student_name }} · {{ student.major }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="secondary-button">切换视角</button>
+  </form>
+</section>
+
+<section class="insight-strip">
+  <article class="insight-card">
+    <span>已选课程</span>
+    <strong>{{ selections|length }}</strong>
+    <small>当前学生已完成的有效选课数量</small>
+  </article>
+  <article class="insight-card">
+    <span>平均总评</span>
+    <strong>{{ "%.1f"|format(((scores|sum(attribute='total_score')) / (scores|length)) if (scores|length) else 0) }}</strong>
+    <small>由当前成绩画像中的总评分数计算</small>
+  </article>
+  <article class="insight-card">
+    <span>预警信号</span>
+    <strong>{{ (warnings|length) + (profiles|length) }}</strong>
+    <small>结合关系库统计与 Mongo 画像结果</small>
+  </article>
+  <article class="insight-card">
+    <span>推荐课程</span>
+    <strong>{{ course_recommendations|length }}</strong>
+    <small>已综合冲突、热度和相似学生行为</small>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="academic-rank">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>课程热选榜</h3>
+      <p>用 Redis 维护当前选课热度，便于展示“缓存支持高并发选课”的实际价值。</p>
+    </div>
+    <div class="rank-bar-list">
+      {% for item in course_rankings %}
+        <div class="rank-bar-row">
+          <div class="rank-copy">
+            <strong>{{ loop.index }}. {{ item.name }}</strong>
+            <span>{{ item.subline }}</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: {{ item.bar_width }}%"></span>
+          </div>
+          <em>{{ item.meta }}</em>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>容量预警速览</h3>
+      <p>从满载率角度补充一个小拓展，能更自然地讲到课程供需分析。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in capacity_alerts %}
+        <div class="warning-card alt">
+          <strong>{{ item.course_name }}</strong>
+          <span>{{ item.value }}</span>
+          <small>{{ item.detail }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="academic-audit">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>选课冲突检测</h3>
+      <p>系统会提前审查已选课程、时间安排和剩余名额，冲突课程会被直接拦截。</p>
+    </div>
+    <div class="warning-grid">
+      {% for item in course_option_audit %}
+        <div class="warning-card {% if item.tone == 'good' or item.tone == 'info' %}alt{% endif %}">
+          <strong>{{ item.course_name }}</strong>
+          <span><span class="status-chip status-{{ item.tone }}">{{ item.status }}</span> {{ item.schedule_text }}</span>
+          <small>{{ item.teacher_name }} · {{ item.classroom }}</small>
+          <small>{{ item.detail }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>智能选课推荐</h3>
+      <p>推荐逻辑综合考虑相似同学选择、同学院热度、课程满载率和当前课表冲突情况。</p>
+    </div>
+    <div class="stacked-blocks">
+      {% for item in course_recommendations %}
+        <div class="stack-block">
+          <h4>{{ item.name }}</h4>
+          <p>{{ item.subline }}</p>
+          <p>{{ item.support }}</p>
+          <p>{{ item.reasons|join(' / ') }}</p>
+        </div>
+      {% else %}
+        <p class="empty-state">当前暂无可推荐课程，可能是可选课程都已存在冲突或已被选满。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="academic-courses">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>课程供给池</h3>
+      <p>可直接点选课，演示名额缓存与主库回写。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>课程</th><th>教师</th><th>时间地点</th><th>容量</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for row in offerings %}
+            <tr>
+              <td>{{ row.course_name }}<br><small>{{ row.course_type }} · {{ row.credit }} 学分</small></td>
+              <td>{{ row.teacher_name }}</td>
+              <td>{{ row.schedule_text }}<br><small>{{ row.classroom }}</small></td>
+              <td>{{ row.selected_count }}/{{ row.capacity }}</td>
+              <td>
+                <form method="post" action="{{ url_for('academic_select') }}">
+                  <input type="hidden" name="student_id" value="{{ selected_student_id }}">
+                  <input type="hidden" name="offering_id" value="{{ row.offering_id }}">
+                  <button type="submit" class="table-button">选课</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>已选课程与课表缓存</h3>
+      <p>退课操作会同步更新容量和缓存配额。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>课程</th><th>教师</th><th>安排</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for row in selections %}
+            <tr>
+              <td>{{ row.course_name }}</td>
+              <td>{{ row.teacher_name }}</td>
+              <td>{{ row.schedule_text }} · {{ row.classroom }}</td>
+              <td>
+                <form method="post" action="{{ url_for('academic_drop') }}">
+                  <input type="hidden" name="selection_id" value="{{ row.selection_id }}">
+                  <button type="submit" class="table-button">退课</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="academic-warnings">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>成绩画像</h3>
+      <p>可用于讲解数据质量、学生画像与预警规则。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>课程</th><th>平时</th><th>期末</th><th>总评</th></tr>
+        </thead>
+        <tbody>
+          {% for row in scores %}
+            <tr>
+              <td>{{ row.course_name }}</td>
+              <td>{{ row.usual_score }}</td>
+              <td>{{ row.final_score }}</td>
+              <td>{{ row.total_score }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>学业预警</h3>
+      <p>系统自动识别低均分与不及格情况，可作为数据治理亮点回答。</p>
+    </div>
+    <div class="warning-grid">
+      {% for row in warnings %}
+        <div class="warning-card">
+          <strong>{{ row.student_name }}</strong>
+          <span>平均分 {{ row.avg_score }}</span>
+          <small>不及格门数 {{ row.fail_count }}</small>
+        </div>
+      {% endfor %}
+      {% for profile in profiles %}
+        <div class="warning-card alt">
+          <strong>{{ profile.studentName }}</strong>
+          <span>{{ profile.riskType }}</span>
+          <small>{{ profile.ruleHitList|join(' / ') }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="academic-logs">
+  <div class="panel-heading">
+    <h3>Mongo 变更日志</h3>
+    <p>每次选课、退课、容量调整都可以形成留痕，体现可追溯治理。</p>
+  </div>
+  <div class="timeline">
+    {% for item in logs %}
+      <div class="timeline-item">
+        <strong>{{ item.changeType }}</strong>
+        <span>{{ item.operator }} · {{ item.target }}</span>
+        <small>{{ item.createdAt }}</small>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

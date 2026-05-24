@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}智慧图书馆 | 智慧校园大数据管理演示系统{% endblock %}
+
+{% block page_nav %}
+<nav class="page-subnav" aria-label="图书馆页导航">
+  <a href="#library-overview">趋势概览</a>
+  <a href="#library-actions">业务操作</a>
+  <a href="#library-rankings">排行驾驶舱</a>
+  <a href="#library-categories">分类榜单</a>
+  <a href="#library-strategy">键策略</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="subsystem-hero library-tone">
+  <div>
+    <p class="eyebrow">Subsystem 01</p>
+    <h2>智慧图书馆子系统</h2>
+    <p>围绕馆藏、借阅、归还、座位预约和阅读行为分析构建，当前已升级为多粒度排行榜方案，可同时展示日榜、周榜、月榜、总榜和分类榜。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">MySQL/SQLite: 借阅与座位事务</span>
+    <span class="pill">Redis: 多层 ZSet 排行、锁、借阅计数</span>
+    <span class="pill">Mongo: 搜索与操作日志</span>
+    <span class="pill">排行榜观察窗口：{{ rank_reference }}</span>
+  </div>
+</section>
+
+<section class="insight-strip" id="library-overview">
+  {% for item in library_insights %}
+    <article class="insight-card">
+      <span>{{ item.label }}</span>
+      <strong>{{ item.value }}</strong>
+      <small>{{ item.detail }}</small>
+    </article>
+  {% endfor %}
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>近三周借阅趋势热力图</h3>
+      <p>把借阅次数按天映射成热力强度，能更直观地展示阅读活跃度变化，而不是只看单次排行榜。</p>
+    </div>
+    <div class="pill-group">
+      <span class="pill">观察区间：{{ borrow_heatmap.range_label }}</span>
+      <span class="pill">总借阅量：{{ borrow_heatmap.total_count }}</span>
+      <span class="pill">日均：{{ borrow_heatmap.average_count }}</span>
+    </div>
+    <div class="heatmap-scroller">
+      <div class="heatmap-grid">
+        <div class="heatmap-axis">
+          {% for label in borrow_heatmap.weekday_labels %}
+            <span>{{ label }}</span>
+          {% endfor %}
+        </div>
+        {% for row in borrow_heatmap.rows %}
+          <div class="heatmap-row">
+            {% for cell in row %}
+              <article class="heatmap-cell {{ cell.level_class }}">
+                <strong>{{ cell.date_short }}</strong>
+                <span>{{ cell.count }} 次</span>
+                <small>{{ cell.weekday }}</small>
+              </article>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>趋势解读</h3>
+      <p>这部分把热力图转成可读的业务结论，用于观察借阅活跃度变化。</p>
+    </div>
+    <div class="warning-grid">
+      <div class="warning-card alt">
+        <strong>{{ borrow_heatmap.peak_count }}</strong>
+        <span>单日峰值借阅</span>
+        <small>峰值日期：{{ borrow_heatmap.peak_date }}</small>
+      </div>
+      <div class="warning-card">
+        <strong>{{ borrow_heatmap.total_count }}</strong>
+        <span>近三周累计借阅</span>
+        <small>覆盖日榜、周榜、月榜同源事件</small>
+      </div>
+      <div class="warning-card alt">
+        <strong>{{ borrow_heatmap.average_count }}</strong>
+        <span>日均借阅次数</span>
+        <small>可用于观察波峰和波谷</small>
+      </div>
+      <div class="warning-card">
+        <strong>趋势判断</strong>
+        <span>{{ borrow_heatmap.trend_label }}</span>
+        <small>说明排行榜之外还支持趋势分析</small>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="library-actions">
+  <article class="panel form-panel">
+    <div class="panel-heading">
+      <h3>图书借阅</h3>
+      <p>选择学生和图书后直接生成借阅记录，并实时刷新热榜。</p>
+    </div>
+    <form method="post" action="{{ url_for('library_borrow') }}" class="stack-form">
+      <label>学生
+        <select name="student_id" required>
+          {% for student in students %}
+            <option value="{{ student.student_id }}">{{ student.student_name }} · {{ student.major }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>图书
+        <select name="book_id" required>
+          {% for book in books %}
+            <option value="{{ book.book_id }}">{{ book.title }}（余 {{ book.available_copies }} 本）</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="primary-button">执行借阅</button>
+    </form>
+  </article>
+
+  <article class="panel form-panel">
+    <div class="panel-heading">
+      <h3>座位预约</h3>
+      <p>采用短锁防并发冲突，保留预约留痕，适合现场演示高并发控制思路。</p>
+    </div>
+    <form method="post" action="{{ url_for('library_reserve_seat') }}" class="stack-form">
+      <label>学生
+        <select name="student_id" required>
+          {% for student in students %}
+            <option value="{{ student.student_id }}">{{ student.student_name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>座位
+        <select name="seat_id" required>
+          {% for seat in seats %}
+            <option value="{{ seat.seat_id }}">{{ seat.room_name }} · {{ seat.seat_no }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>日期
+        <input type="date" name="reserve_date" value="2026-04-10" required>
+      </label>
+      <label>时段
+        <input type="text" name="time_slot" value="14:00-16:00" required>
+      </label>
+      <button type="submit" class="primary-button">提交预约</button>
+    </form>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="library-rankings">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>馆藏检索</h3>
+      <p>支持题名、作者、类别搜索，并记录最后一次检索关键词。</p>
+    </div>
+    <form method="get" action="{{ url_for('library') }}" class="inline-form">
+      <input type="text" name="keyword" value="{{ keyword }}" placeholder="输入 Redis / 数据库 / 管理">
+      <button type="submit" class="secondary-button">搜索图书</button>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>题名</th><th>作者</th><th>类别</th><th>位置</th><th>库存</th></tr>
+        </thead>
+        <tbody>
+          {% for book in books %}
+            <tr>
+              <td>{{ book.title }}</td>
+              <td>{{ book.author }}</td>
+              <td>{{ book.category }}</td>
+              <td>{{ book.shelf }}</td>
+              <td>{{ book.available_copies }}/{{ book.total_copies }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>多粒度排行榜驾驶舱</h3>
+      <p>同一套借阅事件同时写入多类 Redis ZSet，适合现场回答“为什么要拆成多个排行榜键”。</p>
+    </div>
+    <div class="leaderboard-deck">
+      {% for board in rank_boards %}
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>{{ board.title }}</h4>
+              <p>{{ board.subtitle }}</p>
+            </div>
+            <span class="pill">{{ board.ttl_label }}</span>
+          </div>
+          <code class="board-key">{{ board.key }}</code>
+          <div class="rank-bar-list">
+            {% for item in board.entries %}
+              <div class="rank-bar-row">
+                <div class="rank-copy">
+                  <strong>{{ loop.index }}. {{ item.title }}</strong>
+                  <span>{{ item.category }} · 当前可借 {{ item.available_copies }} 本</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: {{ item.bar_width }}%"></span>
+                </div>
+                <em>{{ item.score }}</em>
+              </div>
+            {% else %}
+              <p class="empty-state">该窗口暂无借阅数据。</p>
+            {% endfor %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="library-categories">
+  <article class="panel" id="library-strategy">
+    <div class="panel-heading">
+      <h3>分类日榜</h3>
+      <p>不同类别会拆分为独立 Key，用于观察不同馆藏分类的日内热度变化。</p>
+    </div>
+    <div class="leaderboard-deck compact">
+      {% for board in category_boards %}
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>{{ board.title }}</h4>
+              <p>{{ board.subtitle }}</p>
+            </div>
+            <span class="pill">{{ board.ttl_label }}</span>
+          </div>
+          <code class="board-key">{{ board.key }}</code>
+          <div class="rank-bar-list">
+            {% for item in board.entries %}
+              <div class="rank-bar-row slim">
+                <div class="rank-copy">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.author }}</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: {{ item.bar_width }}%"></span>
+                </div>
+                <em>{{ item.score }}</em>
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+      {% else %}
+        <p class="empty-state">当前还没有形成可展示的分类榜，执行一次借阅后会立即刷新。</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>排行榜键策略</h3>
+      <p>这里集中展示 Key 设计、过期策略和更新时机，便于观察排行榜的组织方式。</p>
+    </div>
+    <div class="catalog-grid">
+      {% for item in leaderboard_catalog %}
+        <article class="catalog-card">
+          <strong>{{ item.scope }}</strong>
+          <code>{{ item.key }}</code>
+          <p>{{ item.note }}</p>
+          <small>过期策略：{{ item.ttl }}</small>
+          <small>更新时机：{{ item.trigger }}</small>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>当前借阅记录</h3>
+      <p>点“归还”即可现场演示事务回写、库存回补和日志留痕。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>学生</th><th>图书</th><th>借出时间</th><th>到期时间</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for row in borrowings %}
+            <tr>
+              <td>{{ row.student_name }}</td>
+              <td>{{ row.title }}</td>
+              <td>{{ row.borrowed_at }}</td>
+              <td>{{ row.due_at }}</td>
+              <td>
+                <form method="post" action="{{ url_for('library_return') }}">
+                  <input type="hidden" name="record_id" value="{{ row.record_id }}">
+                  <button type="submit" class="table-button">归还</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>预约与日志</h3>
+      <p>左侧看预约事务，右侧看 Mongo 风格日志，便于说明“事务 + 缓存 + 留痕”是如何协同的。</p>
+    </div>
+    <div class="log-columns">
+      <div>
+        <h4>座位预约</h4>
+        {% for row in reservations %}
+          <div class="mini-log">
+            <strong>{{ row.student_name }}</strong>
+            <span>{{ row.room_name }} {{ row.seat_no }}</span>
+            <small>{{ row.reserve_date }} {{ row.time_slot }}</small>
+          </div>
+        {% endfor %}
+      </div>
+      <div>
+        <h4>行为日志</h4>
+        {% for item in logs %}
+          <div class="mini-log">
+            <strong>{{ item.action or item.studentName }}</strong>
+            <span>{{ item.studentName or item.bookTitle or item.keyword }}</span>
+            <small>{{ item.createdAt }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+</section>
+{% endblock %}

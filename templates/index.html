@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧校园全局态势与数据管理大屏</title>
+    <script src="{{ url_for('static', filename='vendor/tailwindcdn.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/lucide.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/echarts.min.js') }}"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-panel {
+                @apply bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)];
+            }
+            .glass-card {
+                @apply bg-slate-800/40 backdrop-blur-md border border-slate-600/30 rounded-xl hover:bg-slate-700/50 hover:border-slate-500/50 transition-all duration-300;
+            }
+            .neon-text {
+                @apply text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500;
+            }
+            .neon-border {
+                @apply border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)];
+            }
+        }
+        
+        body {
+            background-color: #020617; /* slate-950 */
+            color: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 动态轮播背景 */
+        .slideshow-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -3;
+            background-color: #020617;
+        }
+        .slideshow-bg .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0;
+            animation: fadeCycle 24s infinite; /* 4张图，总计24秒 */
+        }
+        .slideshow-bg .slide:nth-child(1) { background-image: url('{{ url_for("static", filename="bg1.jpg") }}'); animation-delay: 0s; }
+        .slideshow-bg .slide:nth-child(2) { background-image: url('{{ url_for("static", filename="bg2.jpg") }}'); animation-delay: 6s; }
+        .slideshow-bg .slide:nth-child(3) { background-image: url('{{ url_for("static", filename="bg3.jpg") }}'); animation-delay: 12s; }
+        .slideshow-bg .slide:nth-child(4) { background-image: url('{{ url_for("static", filename="bg4.jpg") }}'); animation-delay: 18s; }
+
+        @keyframes fadeCycle {
+            0%, 100% { opacity: 0; transform: scale(1.0); }
+            8.33%, 25% { opacity: 1; transform: scale(1.05); } /* 呼吸感放大 */
+            33.33% { opacity: 0; transform: scale(1.1); }
+        }
+
+        /* 遮罩层：让图片变暗并产生极微弱的模糊，确保数据依然闪亮 */
+        .slideshow-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: rgba(2, 6, 23, 0.75); 
+            backdrop-filter: blur(2px);
+        }
+
+        /* 粒子容器（去掉了纯色渐变，变成纯透明上层） */
+        .particles-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute; border-radius: 50%;
+            background: rgba(34, 211, 238, 0.4);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: translateY(80vh) scale(1); }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+        }
+
+        /* 呼吸灯效果 */
+        .pulse-glow {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(34,211,238,0.5)); }
+            50% { opacity: .7; filter: drop-shadow(0 0 15px rgba(34,211,238,0.8)); }
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+    <!-- 轮播背景与遮罩 -->
+    <div class="slideshow-bg">
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+    </div>
+    <div class="slideshow-overlay"></div>
+    <!-- 粒子容器 -->
+    <div class="particles-bg" id="particles"></div>
+
+    <!-- 顶部导航栏 -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-t-0 border-l-0 border-r-0 rounded-none px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i data-lucide="sparkles" class="w-6 h-6 text-cyan-400"></i>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider text-slate-100">智慧校园 <span class="neon-text">全局数据态势</span></h1>
+                <p class="text-[10px] font-mono text-cyan-500/80 uppercase tracking-[0.2em]">Campus Data Governance Platform</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex gap-2">
+                <span class="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full {% if redis_runtime.mode == 'real' %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/30{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/30{% endif %}">
+                    <i data-lucide="database" class="w-3 h-3"></i> Redis: {{ redis_runtime.status_label }}
+                </span>
+                <span class="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full {% if mongo_runtime.mode == 'real' %}bg-green-500/10 text-green-400 border border-green-500/30{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/30{% endif %}">
+                    <i data-lucide="server" class="w-3 h-3"></i> Mongo: {{ mongo_runtime.status_label }}
+                </span>
+                <span class="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full {% if graph_runtime.mode == 'neo4j' %}bg-indigo-500/10 text-indigo-400 border border-indigo-500/30{% else %}bg-slate-500/10 text-slate-400 border border-slate-500/30{% endif %}">
+                    <i data-lucide="network" class="w-3 h-3"></i> 图谱: {{ graph_runtime.status_label }}
+                </span>
+            </div>
+            <div class="h-6 w-px bg-slate-700"></div>
+            <form method="post" action="{{ url_for('reset_demo') }}" onsubmit="return confirm('确定重置演示数据？');">
+                <button class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重置系统
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-6 max-w-[1600px] mx-auto space-y-8">
+        
+        <!-- Hero 数据大屏指标 -->
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div class="glass-card p-6 neon-border relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition-all"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium mb-1">文档留痕总量</p>
+                        <h2 class="text-4xl font-bold font-mono text-white">{{ dashboard.stats.mongo_docs }}<span class="text-lg text-slate-500 ml-1">Docs</span></h2>
+                    </div>
+                    <i data-lucide="hard-drive" class="w-8 h-8 text-cyan-400 pulse-glow"></i>
+                </div>
+                <div class="mt-4 text-xs flex items-center gap-1.5 text-emerald-400">
+                    <i data-lucide="trending-up" class="w-3 h-3"></i> <span>基于 MongoDB 实时快照留痕</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium mb-1">学生与教师样本</p>
+                        <h2 class="text-4xl font-bold font-mono text-white">{{ dashboard.stats.student_count }}<span class="text-lg text-slate-500 mx-2">/</span>{{ dashboard.stats.teacher_count }}</h2>
+                    </div>
+                    <i data-lucide="users" class="w-8 h-8 text-blue-400 pulse-glow"></i>
+                </div>
+                <div class="mt-4 text-xs flex items-center gap-1.5 text-blue-400">
+                    <i data-lucide="activity" class="w-3 h-3"></i> <span>SQLite 事务层一致性保障</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium mb-1">当前有效选课</p>
+                        <h2 class="text-4xl font-bold font-mono text-white">{{ dashboard.stats.active_selections }}<span class="text-lg text-slate-500 ml-1">Tx</span></h2>
+                    </div>
+                    <i data-lucide="zap" class="w-8 h-8 text-indigo-400 pulse-glow"></i>
+                </div>
+                <div class="mt-4 text-xs flex items-center gap-1.5 text-indigo-400">
+                    <i data-lucide="layers" class="w-3 h-3"></i> <span>Redis 维护名额摘要与热点状态</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium mb-1">缓存键摘要追踪</p>
+                        <h2 class="text-4xl font-bold font-mono text-white">{{ dashboard.redis_keys|length }}<span class="text-lg text-slate-500 ml-1">Keys</span></h2>
+                    </div>
+                    <i data-lucide="key" class="w-8 h-8 text-purple-400 pulse-glow"></i>
+                </div>
+                <div class="mt-4 text-xs flex items-center gap-1.5 text-purple-400">
+                    <i data-lucide="timer" class="w-3 h-3"></i> <span>缓存键与衍生指标统一追踪</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 核心子系统入口导航 (超大卡片) -->
+        <section class="mt-8">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="layout-grid" class="w-5 h-5 text-cyan-500"></i> 核心业务控制台入口</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 图书馆 -->
+                <a href="{{ url_for('library') }}" class="glass-card p-8 group block hover:-translate-y-1 transition-transform relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i data-lucide="book-open" class="w-12 h-12 text-emerald-400 mb-6 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">智慧图书馆</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">集成检索、借阅流程与座位预约。通过 Redis 提供多时间维度的借阅热力榜单，展示读写分离与缓存设计思路。</p>
+                    <div class="flex items-center text-emerald-400 text-sm font-medium">
+                        进入系统台 <i data-lucide="arrow-right" class="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+                
+                <!-- 教务 -->
+                <a href="{{ url_for('academic') }}" class="glass-card p-8 group block hover:-translate-y-1 transition-transform relative overflow-hidden border-cyan-500/30">
+                    <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i data-lucide="graduation-cap" class="w-12 h-12 text-cyan-400 mb-6 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">智慧教务系统</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">支撑课程供给、选课分流与预警分析，利用 Redis 维护剩余名额和热度摘要，并把画像结果写入文档库留痕。</p>
+                    <div class="flex items-center text-cyan-400 text-sm font-medium">
+                        进入系统台 <i data-lucide="arrow-right" class="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+                <!-- 实践 -->
+                <a href="{{ url_for('practice') }}" class="glass-card p-8 group block hover:-translate-y-1 transition-transform relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i data-lucide="flask-conical" class="w-12 h-12 text-amber-400 mb-6 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"></i>
+                    <h3 class="text-2xl font-bold text-white mb-2">实践教学平台</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">提供实验室预约、任务推进与过程性材料归档。有效统筹结构化任务数据与半结构化的周报评价文档。</p>
+                    <div class="flex items-center text-amber-400 text-sm font-medium">
+                        进入系统台 <i data-lucide="arrow-right" class="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 xl:grid-cols-5 gap-6 mt-8">
+            <div class="glass-panel p-8 xl:col-span-3">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-400"></i> 课程要求达成度</h3>
+                    <span class="text-xs font-mono text-emerald-300/80">Coursework Alignment</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for item in dashboard.compliance_matrix %}
+                    <article class="glass-card p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-100">{{ item.title }}</h4>
+                                <p class="text-xs text-slate-400 mt-2 leading-relaxed">{{ item.detail }}</p>
+                            </div>
+                            <span class="shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">{{ item.status }}</span>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 xl:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="database" class="w-5 h-5 text-cyan-400"></i> 子系统数据库分工</h3>
+                </div>
+                <div class="space-y-4">
+                    {% for item in dashboard.subsystem_matrix %}
+                    <article class="glass-card p-5">
+                        <h4 class="text-sm font-semibold text-slate-100">{{ item.name }}</h4>
+                        <p class="text-xs text-slate-400 mt-3 leading-relaxed"><span class="text-slate-300">结构化:</span> {{ item.structured }}</p>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed"><span class="text-slate-300">非结构化:</span> {{ item.non_structured }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-panel p-8 mt-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="lightbulb" class="w-5 h-5 text-amber-400"></i> 答辩讲解抓手</h3>
+                <span class="text-xs font-mono text-slate-400">What to emphasize</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for item in dashboard.defense_highlights %}
+                <div class="glass-card p-5 text-sm text-slate-300 leading-relaxed">
+                    {{ item }}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Echarts 图表展示区 -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div class="glass-panel p-6 flex flex-col h-[400px]">
+                <h3 class="text-white font-bold mb-2 flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i> 教务系统 - 热门课程供需分析
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">用已选人数和剩余名额拆开展示，现场更容易讲清“供给”和“需求”分别落在哪里。</p>
+                <div id="chart-courses" class="flex-1 w-full"></div>
+            </div>
+            <div class="glass-panel p-6 flex flex-col h-[400px]">
+                <h3 class="text-white font-bold mb-2 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-purple-400"></i> 实践平台 - 实验室资源利用度
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">预约次数直接来自结构化记录与 Redis 排行，不再依赖展示文案做数值推断。</p>
+                <div id="chart-labs" class="flex-1 w-full"></div>
+            </div>
+        </section>
+
+        <!-- 数据治理与图谱分析 -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div class="glass-panel p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i> 数据观测与治理枢纽</h3>
+                    <a href="{{ url_for('data_center') }}" class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-full hover:bg-indigo-500/40 transition-colors">开启控制台</a>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex gap-4 items-center">
+                        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="layers" class="w-5 h-5 text-cyan-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-slate-200 font-semibold text-sm">多数据库运行观测</h4>
+                            <p class="text-slate-400 text-xs mt-1">全局透视事务存储、缓存键空间分布及文档集合状态。</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex gap-4 items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="activity" class="w-5 h-5 text-purple-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-slate-200 font-semibold text-sm">主数据质量评价 (<a href="{{ url_for('governance_lab') }}" class="text-purple-400 hover:underline">实验室</a>)</h4>
+                            <p class="text-slate-400 text-xs mt-1">把主数据目录、质量规则、评分维度和治理快照做成了系统内可见页面，而不是只停留在报告里。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="git-merge" class="w-5 h-5 text-fuchsia-400"></i> 全局业务链路映射</h3>
+                </div>
+                <div class="relative pl-6 border-l border-slate-700 space-y-6">
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center"><div class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div></div>
+                        <h4 class="text-slate-200 font-semibold text-sm">链路 A：热榜实时投射</h4>
+                        <p class="text-slate-400 text-xs mt-1">借阅动作同步触发 Redis 日榜/月榜刷新，并由 Mongo 异步固化日志。</p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-cyan-500/20 border-2 border-cyan-500 flex items-center justify-center"><div class="w-1.5 h-1.5 bg-cyan-400 rounded-full"></div></div>
+                        <h4 class="text-slate-200 font-semibold text-sm">链路 B：名额缓存与冲突预检</h4>
+                        <p class="text-slate-400 text-xs mt-1">当前系统已实现剩余名额摘要、课表冲突判断和热点课程排行；如需进一步扩展，可继续接入消息队列削峰。</p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center"><div class="w-1.5 h-1.5 bg-amber-400 rounded-full"></div></div>
+                        <h4 class="text-slate-200 font-semibold text-sm">链路 C：图谱多跳分析 (<a href="{{ url_for('graph_lab') }}" class="text-amber-400 hover:underline">实验室</a>)</h4>
+                        <p class="text-slate-400 text-xs mt-1">融合选课、借阅、师生关系，依托本地图分析与 Cypher 导出展示多跳推荐和中心性评估。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="mt-12 text-center text-slate-500 text-xs py-6 border-t border-slate-800">
+            <p>构建底座: Flask &middot; SQLite &middot; Redis &middot; MongoDB &middot; NetworkX / Neo4j Ready</p>
+        </footer>
+    </main>
+
+    <!-- 粒子特效脚本 -->
+    <script>
+        lucide.createIcons();
+        
+        // 创建粒子
+        const container = document.getElementById('particles');
+        const particleCount = 40;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 4 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            const duration = Math.random() * 15 + 10;
+            const delay = Math.random() * 10;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `-${delay}s`;
+            container.appendChild(particle);
+        }
+
+        // 初始化 Echarts
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析来自后端的 Jinja2 数据
+            const courseData = {{ dashboard.course_rankings | tojson | safe }};
+            const labData = {{ dashboard.lab_rankings | tojson | safe }};
+            const courseChartElement = document.getElementById('chart-courses');
+            const labChartElement = document.getElementById('chart-labs');
+
+            function renderChartFallback(element, message) {
+                if (!element) {
+                    return;
+                }
+                element.innerHTML = `<div class="empty-state">${message}</div>`;
+            }
+
+            if (typeof echarts === 'undefined') {
+                renderChartFallback(courseChartElement, '图表组件未加载，当前仅展示文字摘要。');
+                renderChartFallback(labChartElement, '图表组件未加载，当前仅展示文字摘要。');
+                return;
+            }
+
+            if (!courseChartElement || !labChartElement) {
+                return;
+            }
+
+            // 图表 1: 热门课程柱状图
+            let courseChart = null;
+            if (Array.isArray(courseData) && courseData.length) {
+                courseChart = echarts.init(courseChartElement, 'dark');
+                const courseNames = courseData.map(d => d.name).slice().reverse();
+                const selectedCounts = courseData.map(d => d.selected_count || d.chart_value || 0).slice().reverse();
+                const remainingCounts = courseData.map(d => d.remaining_count || 0).slice().reverse();
+
+                courseChart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function (params) {
+                            const index = params[0]?.dataIndex ?? 0;
+                            const item = courseData[courseData.length - 1 - index];
+                            return [
+                                `<strong>${item.name}</strong>`,
+                                `教师：${item.teacher_name || item.subline}`,
+                                `已选人数：${item.selected_count} 人`,
+                                `剩余名额：${item.remaining_count} 人`,
+                                `容量上限：${item.capacity} 人`,
+                                `满载率：${item.fill_rate}%`
+                            ].join('<br>');
+                        }
+                    },
+                    legend: {
+                        top: 0,
+                        textStyle: { color: '#94a3b8' }
+                    },
+                    grid: { left: '3%', right: '4%', bottom: '3%', top: '14%', containLabel: true },
+                    xAxis: {
+                        type: 'value',
+                        axisLabel: { color: '#94a3b8' },
+                        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: courseNames,
+                        axisLabel: { color: '#94a3b8' }
+                    },
+                    series: [
+                        {
+                            name: '已选人数',
+                            type: 'bar',
+                            stack: 'capacity',
+                            data: selectedCounts,
+                            itemStyle: {
+                                color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                                    {offset: 0, color: '#38bdf8'},
+                                    {offset: 1, color: '#818cf8'}
+                                ]),
+                                borderRadius: [0, 0, 0, 0]
+                            }
+                        },
+                        {
+                            name: '剩余名额',
+                            type: 'bar',
+                            stack: 'capacity',
+                            data: remainingCounts,
+                            itemStyle: {
+                                color: 'rgba(148, 163, 184, 0.35)',
+                                borderRadius: [0, 6, 6, 0]
+                            }
+                        }
+                    ]
+                });
+            } else {
+                renderChartFallback(courseChartElement, '当前暂无热门课程统计数据。');
+            }
+
+            // 图表 2: 实验室资源饼图
+            let labChart = null;
+            if (Array.isArray(labData) && labData.length) {
+                labChart = echarts.init(labChartElement, 'dark');
+                const pieData = labData.map(d => ({
+                    name: d.name,
+                    value: d.booking_count || d.chart_value || 0,
+                    capacity: d.capacity || 0,
+                    building: d.building || '',
+                    subline: d.subline,
+                    utilization_rate: d.utilization_rate || 0
+                }));
+
+                labChart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function (params) {
+                            const item = params.data;
+                            return [
+                                `<strong>${item.name}</strong>`,
+                                `${item.subline}`,
+                                `累计预约：${item.value} 次`,
+                                `容量：${item.capacity} 人`,
+                                `预约强度：${item.utilization_rate}%`
+                            ].join('<br>');
+                        }
+                    },
+                    legend: { top: 'bottom', textStyle: { color: '#94a3b8' } },
+                    series: [{
+                        name: '占用度',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: 'rgba(2,6,23,0.8)',
+                            borderWidth: 2
+                        },
+                        label: { show: false, position: 'center' },
+                        emphasis: {
+                            label: { show: true, fontSize: 18, fontWeight: 'bold' }
+                        },
+                        labelLine: { show: false },
+                        data: pieData,
+                        color: ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b']
+                    }]
+                });
+            } else {
+                renderChartFallback(labChartElement, '当前暂无实验室预约统计数据。');
+            }
+            
+            // 响应窗口自适应
+            window.addEventListener('resize', function() {
+                if (courseChart) {
+                    courseChart.resize();
+                }
+                if (labChart) {
+                    labChart.resize();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

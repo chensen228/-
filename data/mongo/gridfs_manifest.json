@@ -1,0 +1,122 @@
+[
+  {
+    "_id": "gridfs-academic",
+    "filename": "academic.png",
+    "length": 876721,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\academic.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-academic_latest",
+    "filename": "academic_latest.png",
+    "length": 2954083,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\academic_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-data_center",
+    "filename": "data_center.png",
+    "length": 652590,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\data_center.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-data_center_latest",
+    "filename": "data_center_latest.png",
+    "length": 6966225,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\data_center_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-governance_latest",
+    "filename": "governance_latest.png",
+    "length": 3355661,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\governance_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-graph_latest",
+    "filename": "graph_latest.png",
+    "length": 3765655,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\graph_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-home",
+    "filename": "home.png",
+    "length": 797497,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\home.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-home_latest",
+    "filename": "home_latest.png",
+    "length": 1298303,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\home_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-library",
+    "filename": "library.png",
+    "length": 818316,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\library.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-library_latest",
+    "filename": "library_latest.png",
+    "length": 3435773,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\library_latest.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-practice",
+    "filename": "practice.png",
+    "length": 755121,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\practice.png",
+      "category": "smart-campus-demo"
+    }
+  },
+  {
+    "_id": "gridfs-practice_latest",
+    "filename": "practice_latest.png",
+    "length": 3772843,
+    "uploadDate": "2026-05-24 15:24:53",
+    "metadata": {
+      "sourcePath": "C:\\Users\\css\\Documents\\Playground\\apps\\smart_campus_demo\\screenshots\\practice_latest.png",
+      "category": "smart-campus-demo"
+    }
+  }
+]

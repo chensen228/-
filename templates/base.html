@@ -1,0 +1,164 @@
+<!doctype html>
+{% if active_nav == "home" %}
+  {% set page_label = "Project Overview" %}
+  {% set page_title = "系统总览与模块入口" %}
+  {% set page_summary = "汇总三个业务子系统、数据中心和扩展分析模块，集中展示校园数据系统的整体结构。" %}
+{% elif active_nav == "library" %}
+  {% set page_label = "Subsystem 01" %}
+  {% set page_title = "智慧图书馆业务与热榜引擎" %}
+  {% set page_summary = "围绕借阅、检索、预约和热度排行，展示事务库、缓存库与文档库的协同分工。" %}
+{% elif active_nav == "academic" %}
+  {% set page_label = "Subsystem 02" %}
+  {% set page_title = "智慧教务供需调度与预警分析" %}
+  {% set page_summary = "用选课、容量缓存、成绩画像和变更留痕，说明高并发场景下的数据设计逻辑。" %}
+{% elif active_nav == "practice" %}
+  {% set page_label = "Subsystem 03" %}
+  {% set page_title = "实践教学过程管理与资源联动" %}
+  {% set page_summary = "通过实验室预约、签到、周报与任务推进，展示过程数据和半结构化数据的管理价值。" %}
+{% elif active_nav == "data-center" %}
+  {% set page_label = "Operations Hub" %}
+  {% set page_title = "多数据库协同观测台" %}
+  {% set page_summary = "从统计口径、缓存键、文档集合、治理快照到图谱扩展，统一展示多类数据的分层落点。" %}
+{% elif active_nav == "governance-lab" %}
+  {% set page_label = "Governance Lab" %}
+  {% set page_title = "主数据、质量规则与血缘链路实验室" %}
+  {% set page_summary = "把主数据统一、质量评分和治理留痕显性化，集中展示系统中的治理规则与质量快照。" %}
+{% elif active_nav == "graph-lab" %}
+  {% set page_label = "Graph Lab" %}
+  {% set page_title = "图数据库扩展与多跳关系分析" %}
+  {% set page_summary = "将学生、课程、图书和实践项目抽象成图模型，展示推荐、中心性和多跳路径价值。" %}
+{% else %}
+  {% set page_label = "Smart Campus" %}
+  {% set page_title = "智慧校园大数据管理演示系统" %}
+  {% set page_summary = "异构数据库协同设计与三子系统统一演示入口。" %}
+{% endif %}
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}智慧校园大数据管理演示系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="workspace-shell">
+    <aside class="workspace-sidebar">
+      <section class="sidebar-brand">
+        <p class="brand-kicker">Campus Data Operations Desk</p>
+        <h1>智慧校园大数据管理演示系统</h1>
+        <p>覆盖图书馆、教务、实践教学三类核心场景，并提供治理分析与图谱分析模块。</p>
+      </section>
+
+      <section class="sidebar-status">
+        <article class="status-card">
+          <span>Redis 运行态</span>
+          <strong>{{ redis_runtime.status_label }}</strong>
+          <small>{{ redis_runtime.host }}:{{ redis_runtime.port }} / db{{ redis_runtime.db }}</small>
+        </article>
+        <article class="status-card">
+          <span>Mongo 运行态</span>
+          <strong>{{ mongo_runtime.status_label }}</strong>
+          <small>文档留痕、Geo、TTL、GridFS 与质量快照</small>
+        </article>
+        <article class="status-card">
+          <span>图谱运行态</span>
+          <strong>{{ graph_runtime.status_label }}</strong>
+          <small>Cypher 导出、推荐关系和中心性分析</small>
+        </article>
+      </section>
+
+      <nav class="side-nav" aria-label="主导航">
+        <div class="nav-group">
+          <p class="nav-caption">核心演示</p>
+          <a href="{{ url_for('index') }}" class="side-nav-link {% if active_nav == 'home' %}active{% endif %}">
+            <span>总览</span>
+            <small>系统态势、模块入口与整体架构</small>
+          </a>
+          <a href="{{ url_for('library') }}" class="side-nav-link {% if active_nav == 'library' %}active{% endif %}">
+            <span>智慧图书馆</span>
+            <small>借阅、检索、预约和多粒度排行榜</small>
+          </a>
+          <a href="{{ url_for('academic') }}" class="side-nav-link {% if active_nav == 'academic' %}active{% endif %}">
+            <span>智慧教务</span>
+            <small>选课供需、容量缓存与学业预警</small>
+          </a>
+          <a href="{{ url_for('practice') }}" class="side-nav-link {% if active_nav == 'practice' %}active{% endif %}">
+            <span>实践教学平台</span>
+            <small>预约、签到、周报与任务推进</small>
+          </a>
+          <a href="{{ url_for('data_center') }}" class="side-nav-link {% if active_nav == 'data-center' %}active{% endif %}">
+            <span>数据中心</span>
+            <small>多数据库落点、缓存键和文档集合</small>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-caption">扩展模块</p>
+          <a href="{{ url_for('governance_lab') }}" class="side-nav-link {% if active_nav == 'governance-lab' %}active{% endif %}">
+            <span>数据治理实验室</span>
+            <small>主数据、质量评分、治理规则和血缘</small>
+          </a>
+          <a href="{{ url_for('graph_lab') }}" class="side-nav-link {% if active_nav == 'graph-lab' %}active{% endif %}">
+            <span>图谱创新实验室</span>
+            <small>图模型、推荐、路径分析和中心性</small>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="workspace-main">
+      <header class="topbar">
+        <div class="page-intro">
+          <p class="brand-kicker">{{ page_label }}</p>
+          <h2>{{ page_title }}</h2>
+          <p>{{ page_summary }}</p>
+        </div>
+        <div class="topbar-side">
+          <div class="topbar-mini-grid">
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>核心子系统</span>
+            </article>
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>数据库角色</span>
+            </article>
+            <article class="mini-stat">
+              <strong>2</strong>
+              <span>扩展实验室</span>
+            </article>
+          </div>
+          <div class="runtime-badges">
+            <span class="pill {% if redis_runtime.mode == 'real' %}pill-good{% else %}pill-warn{% endif %}">{{ redis_runtime.status_label }}</span>
+            <span class="pill {% if mongo_runtime.mode == 'real' %}pill-good{% else %}pill-warn{% endif %}">{{ mongo_runtime.status_label }}</span>
+            <span class="pill {% if graph_runtime.mode == 'neo4j' %}pill-good{% else %}pill-warn{% endif %}">{{ graph_runtime.status_label }}</span>
+          </div>
+          <form method="post" action="{{ url_for('reset_demo') }}" class="reset-form">
+            <button type="submit" class="ghost-button" data-confirm="确定要重置全部演示数据吗？">重置演示数据</button>
+          </form>
+        </div>
+      </header>
+
+      {% block page_nav %}{% endblock %}
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      <main class="main-content">
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="footer">
+        <p>技术结构：SQLite 负责事务层，Redis 负责缓存与排行，MongoDB 负责日志、画像和文档扩展，图谱模块负责关系抽象与 Cypher 导出。</p>
+      </footer>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
