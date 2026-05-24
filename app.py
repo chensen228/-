@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import traceback
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -19,6 +20,17 @@ def as_int(value: str | None, default: int | None = None) -> int | None:
         return int(value) if value not in (None, "") else default
     except (TypeError, ValueError):
         return default
+
+
+def render_with_recovery(template_name: str, active_nav: str, context_builder):
+    try:
+        return render_template(template_name, active_nav=active_nav, **context_builder())
+    except Exception:
+        if os.getenv("RENDER", "").lower() != "true":
+            raise
+        traceback.print_exc()
+        repo.reset_demo()
+        return render_template(template_name, active_nav=active_nav, **context_builder())
 
 
 @app.context_processor
@@ -131,7 +143,7 @@ def practice_report():
 
 @app.get("/data-center")
 def data_center():
-    return render_template("data_center.html", active_nav="data-center", **repo.data_center_overview())
+    return render_with_recovery("data_center.html", "data-center", repo.data_center_overview)
 
 
 @app.get("/governance-lab")
@@ -142,7 +154,7 @@ def governance_lab():
 @app.get("/graph-lab")
 def graph_lab():
     student_id = as_int(request.args.get("student_id"))
-    return render_template("graph_lab.html", active_nav="graph-lab", **repo.graph_overview(student_id))
+    return render_with_recovery("graph_lab.html", "graph-lab", lambda: repo.graph_overview(student_id))
 
 
 @app.post("/reset-demo")
