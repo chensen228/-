@@ -11,6 +11,24 @@ from demo_backend import SmartCampusRepository
 
 BASE_DIR = Path(__file__).resolve().parent
 RUNNING_ON_RENDER = any(os.getenv(name) for name in ("RENDER", "RENDER_SERVICE_ID", "RENDER_EXTERNAL_URL"))
+DIST_ROUTE_REPLACEMENTS = {
+    "./index.html": "/",
+    "./library.html": "/library",
+    "./academic.html": "/academic",
+    "./practice.html": "/practice",
+    "./data-center.html": "/data-center",
+    "./governance-lab.html": "/governance-lab",
+    "./graph-lab.html": "/graph-lab",
+    "./static/": "/static/",
+}
+DIST_RUNTIME_REPLACEMENTS = {
+    "真实 Redis（127.0.0.1:6379/db0）": "云端回退缓存模式",
+    "127.0.0.1:6379 / db0": "Render 免费实例 · 内置 JSON fallback",
+    "真实 MongoDB（127.0.0.1:27017/smart_campus）": "云端回退文档模式",
+    "文档留痕、Geo、TTL、GridFS 与质量快照": "Render 免费实例 · 内置 JSON 文档 fallback",
+    "Neo4j 已连接（bolt://127.0.0.1:7687）": "本地图分析模式",
+    "Cypher 导出、推荐关系和中心性分析": "Render 免费实例未接入 Neo4j，保留图分析展示",
+}
 app = Flask(__name__)
 app.secret_key = os.getenv("SMART_CAMPUS_SECRET_KEY", "smart-campus-demo-secret")
 repo = SmartCampusRepository(BASE_DIR)
@@ -23,15 +41,37 @@ def as_int(value: str | None, default: int | None = None) -> int | None:
         return default
 
 
-def render_with_recovery(template_name: str, active_nav: str, context_builder):
+def render_dist_fallback(filename: str) -> str:
+    html = (BASE_DIR / "dist" / filename).read_text(encoding="utf-8")
+    for source, target in DIST_ROUTE_REPLACEMENTS.items():
+        html = html.replace(source, target)
+    for source, target in DIST_RUNTIME_REPLACEMENTS.items():
+        html = html.replace(source, target)
+    notice = (
+        '<div style="padding:12px 16px;background:#fef3c7;color:#92400e;'
+        'font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;'
+        'border-bottom:1px solid #fcd34d;">'
+        "当前页面使用云端演示兜底视图展示，原因是 Render 免费实例的动态分析上下文未完全恢复。"
+        "</div>"
+    )
+    return html.replace("<body>", f"<body>{notice}", 1)
+
+
+def render_with_recovery(template_name: str, active_nav: str, context_builder, dist_fallback: str | None = None):
     try:
         return render_template(template_name, active_nav=active_nav, **context_builder())
     except Exception:
         if not RUNNING_ON_RENDER:
             raise
         traceback.print_exc()
-        repo.reset_demo()
-        return render_template(template_name, active_nav=active_nav, **context_builder())
+        try:
+            repo.reset_demo()
+            return render_template(template_name, active_nav=active_nav, **context_builder())
+        except Exception:
+            traceback.print_exc()
+            if dist_fallback:
+                return render_dist_fallback(dist_fallback)
+            raise
 
 
 @app.context_processor
@@ -144,7 +184,7 @@ def practice_report():
 
 @app.get("/data-center")
 def data_center():
-    return render_with_recovery("data_center.html", "data-center", repo.data_center_overview)
+    return render_with_recovery("data_center.html", "data-center", repo.data_center_overview, dist_fallback="data-center.html")
 
 
 @app.get("/governance-lab")
@@ -155,7 +195,7 @@ def governance_lab():
 @app.get("/graph-lab")
 def graph_lab():
     student_id = as_int(request.args.get("student_id"))
-    return render_with_recovery("graph_lab.html", "graph-lab", lambda: repo.graph_overview(student_id))
+    return render_with_recovery("graph_lab.html", "graph-lab", lambda: repo.graph_overview(student_id), dist_fallback="graph-lab.html")
 
 
 @app.post("/reset-demo")
