@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import tempfile
 import time
 from collections import Counter
 from contextlib import contextmanager
@@ -24,13 +25,16 @@ except ImportError:
 
 
 APP_DIR = Path(__file__).resolve().parent
-DATA_DIR = APP_DIR / "data"
-MONGO_DIR = DATA_DIR / "mongo"
-DB_PATH = DATA_DIR / "smart_campus.db"
-REDIS_STATE_PATH = DATA_DIR / "redis_state.json"
 CURRENT_TERM = "2025-2026-2"
 RUNNING_ON_RENDER = os.getenv("RENDER", "").lower() == "true"
 FORCE_LOCAL_FALLBACK = os.getenv("SMART_CAMPUS_FORCE_FALLBACK", "").lower() in {"1", "true", "yes", "on"}
+DEFAULT_RUNTIME_DATA_DIR = APP_DIR / "data"
+if RUNNING_ON_RENDER:
+    DEFAULT_RUNTIME_DATA_DIR = Path(tempfile.gettempdir()) / "smart_campus_demo_data"
+DATA_DIR = Path(os.getenv("SMART_CAMPUS_RUNTIME_DIR", str(DEFAULT_RUNTIME_DATA_DIR)))
+MONGO_DIR = DATA_DIR / "mongo"
+DB_PATH = DATA_DIR / "smart_campus.db"
+REDIS_STATE_PATH = DATA_DIR / "redis_state.json"
 REDIS_HOST = os.getenv("SMART_CAMPUS_REDIS_HOST", "" if RUNNING_ON_RENDER else "127.0.0.1")
 REDIS_PORT = int(os.getenv("SMART_CAMPUS_REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("SMART_CAMPUS_REDIS_DB", "0"))
