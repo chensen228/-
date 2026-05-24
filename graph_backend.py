@@ -14,6 +14,9 @@ except ImportError:
     GraphDatabase = None
 
 
+RUNNING_ON_RENDER = any(os.getenv(name) for name in ("RENDER", "RENDER_SERVICE_ID", "RENDER_EXTERNAL_URL"))
+
+
 def _escape(value: Any) -> str:
     return str(value).replace("\\", "\\\\").replace("'", "\\'")
 
@@ -24,7 +27,7 @@ class CampusGraphService:
         self.export_dir.mkdir(parents=True, exist_ok=True)
         self.cypher_path = self.export_dir / "smart_campus_graph.cypher"
         runtime_config = self._load_runtime_config()
-        if os.getenv("RENDER", "").lower() == "true" and not os.getenv("SMART_CAMPUS_NEO4J_URI"):
+        if RUNNING_ON_RENDER and not os.getenv("SMART_CAMPUS_NEO4J_URI"):
             runtime_config = {}
         self.uri = os.getenv("SMART_CAMPUS_NEO4J_URI", runtime_config.get("uri", ""))
         self.user = os.getenv("SMART_CAMPUS_NEO4J_USER", runtime_config.get("user", ""))

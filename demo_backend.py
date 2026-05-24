@@ -5,6 +5,7 @@ import os
 import sqlite3
 import tempfile
 import time
+import traceback
 from collections import Counter
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -26,8 +27,9 @@ except ImportError:
 
 APP_DIR = Path(__file__).resolve().parent
 CURRENT_TERM = "2025-2026-2"
-RUNNING_ON_RENDER = os.getenv("RENDER", "").lower() == "true"
+RUNNING_ON_RENDER = any(os.getenv(name) for name in ("RENDER", "RENDER_SERVICE_ID", "RENDER_EXTERNAL_URL"))
 FORCE_LOCAL_FALLBACK = os.getenv("SMART_CAMPUS_FORCE_FALLBACK", "").lower() in {"1", "true", "yes", "on"}
+RESET_RUNTIME_ON_BOOT = RUNNING_ON_RENDER and os.getenv("SMART_CAMPUS_RESET_ON_BOOT", "true").lower() not in {"0", "false", "no", "off"}
 DEFAULT_RUNTIME_DATA_DIR = APP_DIR / "data"
 if RUNNING_ON_RENDER:
     DEFAULT_RUNTIME_DATA_DIR = Path(tempfile.gettempdir()) / "smart_campus_demo_data"
@@ -425,7 +427,14 @@ class SmartCampusRepository:
         if self.mongo.mode == "fallback":
             self._last_mongo_probe = time.time()
         self.graph = CampusGraphService(DATA_DIR / "graph")
-        self.ensure_ready()
+        if RESET_RUNTIME_ON_BOOT:
+            try:
+                self.reset_demo()
+            except Exception:
+                traceback.print_exc()
+                self.ensure_ready()
+        else:
+            self.ensure_ready()
 
     def _create_redis_store(self) -> RedisLite | RealRedisStore:
         if FORCE_LOCAL_FALLBACK or not REDIS_HOST:

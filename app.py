@@ -10,6 +10,7 @@ from demo_backend import SmartCampusRepository
 
 
 BASE_DIR = Path(__file__).resolve().parent
+RUNNING_ON_RENDER = any(os.getenv(name) for name in ("RENDER", "RENDER_SERVICE_ID", "RENDER_EXTERNAL_URL"))
 app = Flask(__name__)
 app.secret_key = os.getenv("SMART_CAMPUS_SECRET_KEY", "smart-campus-demo-secret")
 repo = SmartCampusRepository(BASE_DIR)
@@ -26,7 +27,7 @@ def render_with_recovery(template_name: str, active_nav: str, context_builder):
     try:
         return render_template(template_name, active_nav=active_nav, **context_builder())
     except Exception:
-        if os.getenv("RENDER", "").lower() != "true":
+        if not RUNNING_ON_RENDER:
             raise
         traceback.print_exc()
         repo.reset_demo()
@@ -176,6 +177,6 @@ def healthz():
 
 
 if __name__ == "__main__":
-    host = os.getenv("SMART_CAMPUS_HOST", "0.0.0.0" if os.getenv("RENDER") == "true" or os.getenv("PORT") else "127.0.0.1")
+    host = os.getenv("SMART_CAMPUS_HOST", "0.0.0.0" if RUNNING_ON_RENDER or os.getenv("PORT") else "127.0.0.1")
     port = int(os.getenv("PORT", os.getenv("SMART_CAMPUS_PORT", "5050")))
     app.run(host=host, port=port, debug=False)
