@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import os
 import traceback
 from pathlib import Path
@@ -29,6 +30,30 @@ DIST_RUNTIME_REPLACEMENTS = {
     "Neo4j 已连接（bolt://127.0.0.1:7687）": "本地图分析模式",
     "Cypher 导出、推荐关系和中心性分析": "Render 免费实例未接入 Neo4j，保留图分析展示",
 }
+FALLBACK_PAGE_META = {
+    "data-center.html": {
+        "title": "数据中心",
+        "heading": "数据中心云端演示页",
+        "description": "Render 免费实例未完整恢复动态分析上下文，当前先展示可访问的云端兜底页。",
+        "bullets": [
+            "结构化数据主库：SQLite 事务数据",
+            "缓存层：Redis 排行、配额、状态摘要",
+            "文档层：Mongo 行为日志、画像、质量快照",
+            "当前云端部署使用 fallback 存储，适合老师在线查看系统结构与页面入口",
+        ],
+    },
+    "graph-lab.html": {
+        "title": "图谱创新",
+        "heading": "图谱创新云端演示页",
+        "description": "Render 免费实例未完整恢复图谱动态分析上下文，当前先展示可访问的云端兜底页。",
+        "bullets": [
+            "图模型覆盖学生、课程、教师、图书、实践任务与实验室",
+            "本地完整版支持推荐、路径分析、中心性分析与 Cypher 导出",
+            "云端免费版保留主页和业务入口，图谱页先以说明性兜底内容替代",
+            "答辩时可通过本地运行版演示完整图谱交互能力",
+        ],
+    },
+}
 app = Flask(__name__)
 app.secret_key = os.getenv("SMART_CAMPUS_SECRET_KEY", "smart-campus-demo-secret")
 repo = SmartCampusRepository(BASE_DIR)
@@ -41,8 +66,89 @@ def as_int(value: str | None, default: int | None = None) -> int | None:
         return default
 
 
+def render_plain_fallback(filename: str) -> str:
+    meta = FALLBACK_PAGE_META.get(filename, FALLBACK_PAGE_META["data-center.html"])
+    bullets = "".join(f"<li>{html.escape(item)}</li>" for item in meta["bullets"])
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{html.escape(meta['title'])} | 智慧校园大数据管理演示系统</title>
+  <style>
+    body {{
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #18212f;
+    }}
+    .wrap {{
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }}
+    .notice {{
+      margin-bottom: 24px;
+      padding: 14px 16px;
+      border: 1px solid #fcd34d;
+      background: #fffbeb;
+      color: #92400e;
+      border-radius: 12px;
+    }}
+    .panel {{
+      background: #fff;
+      border: 1px solid #dbe4f0;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }}
+    h1 {{ margin: 0 0 12px; font-size: 32px; }}
+    p {{ line-height: 1.7; }}
+    ul {{ line-height: 1.8; padding-left: 20px; }}
+    .links {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }}
+    a {{
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #fff;
+      background: #2563eb;
+    }}
+    a.secondary {{
+      background: #475569;
+    }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="notice">当前页面使用云端演示兜底视图展示。Render 免费实例已成功上线，但该高级分析页的动态上下文未完全恢复。</div>
+    <section class="panel">
+      <h1>{html.escape(meta['heading'])}</h1>
+      <p>{html.escape(meta['description'])}</p>
+      <ul>{bullets}</ul>
+      <div class="links">
+        <a href="/">返回系统首页</a>
+        <a href="/library" class="secondary">智慧图书馆</a>
+        <a href="/academic" class="secondary">智慧教务</a>
+        <a href="/practice" class="secondary">实践教学</a>
+        <a href="/governance-lab" class="secondary">数据治理实验室</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>"""
+
+
 def render_dist_fallback(filename: str) -> str:
-    html = (BASE_DIR / "dist" / filename).read_text(encoding="utf-8")
+    dist_path = BASE_DIR / "dist" / filename
+    if not dist_path.exists():
+        return render_plain_fallback(filename)
+    html = dist_path.read_text(encoding="utf-8")
     for source, target in DIST_ROUTE_REPLACEMENTS.items():
         html = html.replace(source, target)
     for source, target in DIST_RUNTIME_REPLACEMENTS.items():
