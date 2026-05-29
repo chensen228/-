@@ -145,10 +145,14 @@ def render_plain_fallback(filename: str) -> str:
 
 
 def render_dist_fallback(filename: str) -> str:
-    dist_path = BASE_DIR / "dist" / filename
-    if not dist_path.exists():
+    fallback_candidates = [
+        BASE_DIR / "cloud_fallback" / filename,
+        BASE_DIR / "dist" / filename,
+    ]
+    source_path = next((path for path in fallback_candidates if path.exists()), None)
+    if source_path is None:
         return render_plain_fallback(filename)
-    html = dist_path.read_text(encoding="utf-8")
+    html = source_path.read_text(encoding="utf-8")
     for source, target in DIST_ROUTE_REPLACEMENTS.items():
         html = html.replace(source, target)
     for source, target in DIST_RUNTIME_REPLACEMENTS.items():

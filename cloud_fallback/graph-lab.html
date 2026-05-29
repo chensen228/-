@@ -1,0 +1,1018 @@
+<!doctype html>
+
+  
+  
+  
+
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图谱创新 | 智慧校园大数据管理演示系统</title>
+  <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+  <div class="workspace-shell">
+    <aside class="workspace-sidebar">
+      <section class="sidebar-brand">
+        <p class="brand-kicker">Campus Data Operations Desk</p>
+        <h1>智慧校园大数据管理演示系统</h1>
+        <p>覆盖图书馆、教务、实践教学三类核心场景，并提供治理分析与图谱分析模块。</p>
+      </section>
+
+      <section class="sidebar-status">
+        <article class="status-card">
+          <span>Redis 运行态</span>
+          <strong>真实 Redis（127.0.0.1:6379/db0）</strong>
+          <small>127.0.0.1:6379 / db0</small>
+        </article>
+        <article class="status-card">
+          <span>Mongo 运行态</span>
+          <strong>真实 MongoDB（127.0.0.1:27017/smart_campus）</strong>
+          <small>文档留痕、Geo、TTL、GridFS 与质量快照</small>
+        </article>
+        <article class="status-card">
+          <span>图谱运行态</span>
+          <strong>Neo4j 已连接（bolt://127.0.0.1:7687）</strong>
+          <small>Cypher 导出、推荐关系和中心性分析</small>
+        </article>
+      </section>
+
+      <nav class="side-nav" aria-label="主导航">
+        <div class="nav-group">
+          <p class="nav-caption">核心演示</p>
+          <a href="./index.html" class="side-nav-link ">
+            <span>总览</span>
+            <small>系统态势、模块入口与整体架构</small>
+          </a>
+          <a href="./library.html" class="side-nav-link ">
+            <span>智慧图书馆</span>
+            <small>借阅、检索、预约和多粒度排行榜</small>
+          </a>
+          <a href="./academic.html" class="side-nav-link ">
+            <span>智慧教务</span>
+            <small>选课供需、容量缓存与学业预警</small>
+          </a>
+          <a href="./practice.html" class="side-nav-link ">
+            <span>实践教学平台</span>
+            <small>预约、签到、周报与任务推进</small>
+          </a>
+          <a href="./data-center.html" class="side-nav-link ">
+            <span>数据中心</span>
+            <small>多数据库落点、缓存键和文档集合</small>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-caption">扩展模块</p>
+          <a href="./governance-lab.html" class="side-nav-link ">
+            <span>数据治理实验室</span>
+            <small>主数据、质量评分、治理规则和血缘</small>
+          </a>
+          <a href="./graph-lab.html" class="side-nav-link active">
+            <span>图谱创新实验室</span>
+            <small>图模型、推荐、路径分析和中心性</small>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="workspace-main">
+      <header class="topbar">
+        <div class="page-intro">
+          <p class="brand-kicker">Graph Lab</p>
+          <h2>图数据库扩展与多跳关系分析</h2>
+          <p>将学生、课程、图书和实践项目抽象成图模型，展示推荐、中心性和多跳路径价值。</p>
+        </div>
+        <div class="topbar-side">
+          <div class="topbar-mini-grid">
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>核心子系统</span>
+            </article>
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>数据库角色</span>
+            </article>
+            <article class="mini-stat">
+              <strong>2</strong>
+              <span>扩展实验室</span>
+            </article>
+          </div>
+          <div class="runtime-badges">
+            <span class="pill pill-good">真实 Redis（127.0.0.1:6379/db0）</span>
+            <span class="pill pill-good">真实 MongoDB（127.0.0.1:27017/smart_campus）</span>
+            <span class="pill pill-good">Neo4j 已连接（bolt://127.0.0.1:7687）</span>
+          </div>
+          <form onsubmit="alert(\'云端静态展示切片仅支持数据预览与图谱交互，无法进行真实的数据库写入操作。如需体验请部署本地完整版。\'); return false;">
+            <button type="submit" class="ghost-button" data-confirm="确定要重置全部演示数据吗？">重置演示数据</button>
+          </form>
+        </div>
+      </header>
+
+      
+<nav class="page-subnav" aria-label="图谱页导航">
+  <a href="#graph-student">分析学生</a>
+  <a href="#graph-network">交互图谱</a>
+  <a href="#graph-summary">图模型摘要</a>
+  <a href="#graph-recommendation">推荐与路径</a>
+  <a href="#graph-cypher">Cypher 范例</a>
+</nav>
+
+
+      
+        
+      
+
+      <main class="main-content">
+        
+<script type="text/javascript" src="./static/vendor/vis-network.min.js"></script>
+<section class="subsystem-hero data-tone">
+  <div>
+    <p class="eyebrow">Graph Innovation</p>
+    <h2>图数据库扩展实验室</h2>
+    <p>把智慧校园中的“学生-课程-教师”“读者-图书-类别”“学生-任务-实验室”关系抽象成图模型，用图查询和多跳路径展示为什么这些场景适合图数据库。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">图运行时：Neo4j 已连接（bolt://127.0.0.1:7687）</span>
+    <span class="pill">节点数：42</span>
+    <span class="pill">关系数：44</span>
+    <span class="pill">Cypher 导出：smart_campus_graph.cypher</span>
+  </div>
+</section>
+
+<section class="panel" id="graph-student">
+  <div class="panel-heading">
+    <h3>当前分析学生</h3>
+    <p>切换不同学生，可观察课程推荐、图书推荐和多跳关系路径如何变化。</p>
+  </div>
+  <form onsubmit="alert(\'云端静态展示切片仅支持数据预览与图谱交互，无法进行真实的数据库写入操作。如需体验请部署本地完整版。\'); return false;">
+    <select name="student_id">
+      
+        <option value="1" >张三 · 数据科学与大数据技术</option>
+      
+        <option value="2" selected>李四 · 软件工程</option>
+      
+        <option value="3" >王敏 · 信息管理与信息系统</option>
+      
+        <option value="4" >陈晨 · 计算机科学与技术</option>
+      
+    </select>
+    <button type="submit" class="secondary-button">切换图谱视角</button>
+  </form>
+</section>
+
+<section class="panel" id="graph-network">
+  <div class="panel-heading">
+    <h3>图谱动态交互可视化 (Vis.js)</h3>
+    <p>你可以用鼠标随意拖拽、放大、缩小下方的图谱节点。每个不同颜色的节点代表不同类型的实体（学生、课程、教师等）。</p>
+  </div>
+  <div class="graph-toolbar">
+    <div class="graph-toolbar-group">
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="fit">适配全图</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="focus-student">聚焦当前学生</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="toggle-physics">关闭布局</button>
+      <button type="button" class="ghost-button graph-tool-button" data-graph-action="toggle-edge-labels">隐藏关系标签</button>
+    </div>
+    <div class="graph-toolbar-group graph-toolbar-search">
+      <label class="graph-search-field">
+        <span>定位节点</span>
+        <input id="graph-search" type="search" placeholder="输入学生、课程、教师或图书名">
+      </label>
+      <button type="button" class="secondary-button graph-tool-button" data-graph-action="search-node">定位</button>
+      <button type="button" class="secondary-button graph-tool-button" data-graph-action="clear-selection">清除高亮</button>
+    </div>
+  </div>
+  <div class="graph-layout">
+    <div class="graph-stage">
+      <div id="mynetwork" class="graph-canvas" role="img" aria-label="校园图谱网络图"></div>
+      <div class="route-list graph-help-strip">
+        <span class="step-pill">拖拽节点可观察局部关系，滚轮缩放可查看密集结构。</span>
+        <span class="step-pill">聚焦当前学生后，适合直接讲课程推荐、图书推荐和多跳路径。</span>
+      </div>
+    </div>
+    <aside class="graph-aside">
+      <article class="graph-side-card">
+        <div class="graph-side-head">
+          <h4>当前焦点</h4>
+          <span class="pill pill-good">李四 · 软件工程</span>
+        </div>
+        <div id="graph-selection" class="graph-selection-card">
+          <strong>李四</strong>
+          <span>默认分析学生</span>
+          <small>页面加载后会优先聚焦该学生。点击节点可查看实体属性，点击关系可查看边类型与连接方向。</small>
+        </div>
+      </article>
+      <article class="graph-side-card">
+        <div class="graph-side-head">
+          <h4>图例与导出</h4>
+          <button
+            type="button"
+            class="secondary-button graph-tool-button compact"
+            data-copy-text="C:\Users\css\Documents\Playground\apps\smart_campus_demo\data\graph\smart_campus_graph.cypher"
+            data-copy-success="路径已复制"
+          >复制 Cypher 路径</button>
+        </div>
+        <div class="graph-legend-list">
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#3b82f6;border-color:#2563eb;"></span><span>Student 学生</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#10b981;border-color:#059669;"></span><span>Course 课程</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#8b5cf6;border-color:#7c3aed;"></span><span>Teacher 教师</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#f59e0b;border-color:#d97706;"></span><span>Book 图书</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#ef4444;border-color:#dc2626;"></span><span>Category 分类</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#ec4899;border-color:#db2777;"></span><span>Task 实践任务</span></div>
+          <div class="graph-legend-item"><span class="graph-legend-dot" style="background:#06b6d4;border-color:#0891b2;"></span><span>LabRoom 实验室</span></div>
+        </div>
+        <div class="graph-export-note">
+          <strong>smart_campus_graph.cypher</strong>
+          <small>Neo4j 已连接（bolt://127.0.0.1:7687）</small>
+        </div>
+      </article>
+    </aside>
+  </div>
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        var rawData = {"edges": [{"arrows": "to", "detailMap": {}, "from": "student:1", "id": "edge-1", "label": "MAJOR_IN", "relationType": "MAJOR_IN", "title": "MAJOR_IN", "to": "major:\u6570\u636e\u79d1\u5b66\u4e0e\u5927\u6570\u636e\u6280\u672f"}, {"arrows": "to", "detailMap": {"selected_at": "2026-03-01 10:00:00", "status": "selected"}, "from": "student:1", "id": "edge-2", "label": "ENROLLED_IN", "relationType": "ENROLLED_IN", "title": "\u003cb\u003eselected_at\u003c/b\u003e: 2026-03-01 10:00:00\u003cbr\u003e\u003cb\u003estatus\u003c/b\u003e: selected", "to": "course:1"}, {"arrows": "to", "detailMap": {"total_score": 88.0}, "from": "student:1", "id": "edge-3", "label": "SCORED_IN", "relationType": "SCORED_IN", "title": "\u003cb\u003etotal_score\u003c/b\u003e: 88.0", "to": "course:1"}, {"arrows": "to", "detailMap": {"selected_at": "2026-03-03 09:30:00", "status": "selected"}, "from": "student:1", "id": "edge-4", "label": "ENROLLED_IN", "relationType": "ENROLLED_IN", "title": "\u003cb\u003eselected_at\u003c/b\u003e: 2026-03-03 09:30:00\u003cbr\u003e\u003cb\u003estatus\u003c/b\u003e: selected", "to": "course:3"}, {"arrows": "to", "detailMap": {"total_score": 93.0}, "from": "student:1", "id": "edge-5", "label": "SCORED_IN", "relationType": "SCORED_IN", "title": "\u003cb\u003etotal_score\u003c/b\u003e: 93.0", "to": "course:3"}, {"arrows": "to", "detailMap": {"status": "borrowing"}, "from": "student:1", "id": "edge-6", "label": "BORROWED", "relationType": "BORROWED", "title": "\u003cb\u003estatus\u003c/b\u003e: borrowing", "to": "book:1"}, {"arrows": "to", "detailMap": {"progress": 70}, "from": "student:1", "id": "edge-7", "label": "HAS_TASK", "relationType": "HAS_TASK", "title": "\u003cb\u003eprogress\u003c/b\u003e: 70", "to": "task:1"}, {"arrows": "to", "detailMap": {"booking_date": "2026-04-08"}, "from": "student:1", "id": "edge-8", "label": "BOOKED_LAB", "relationType": "BOOKED_LAB", "title": "\u003cb\u003ebooking_date\u003c/b\u003e: 2026-04-08", "to": "lab:1"}, {"arrows": "to", "detailMap": {}, "from": "major:\u6570\u636e\u79d1\u5b66\u4e0e\u5927\u6570\u636e\u6280\u672f", "id": "edge-9", "label": "BELONGS_TO", "relationType": "BELONGS_TO", "title": "BELONGS_TO", "to": "college:\u8ba1\u7b97\u673a\u5b66\u9662"}, {"arrows": "to", "detailMap": {}, "from": "student:2", "id": "edge-10", "label": "MAJOR_IN", "relationType": "MAJOR_IN", "title": "MAJOR_IN", "to": "major:\u8f6f\u4ef6\u5de5\u7a0b"}, {"arrows": "to", "detailMap": {"selected_at": "2026-03-01 10:08:00", "status": "selected"}, "from": "student:2", "id": "edge-11", "label": "ENROLLED_IN", "relationType": "ENROLLED_IN", "title": "\u003cb\u003eselected_at\u003c/b\u003e: 2026-03-01 10:08:00\u003cbr\u003e\u003cb\u003estatus\u003c/b\u003e: selected", "to": "course:1"}, {"arrows": "to", "detailMap": {"total_score": 80.0}, "from": "student:2", "id": "edge-12", "label": "SCORED_IN", "relationType": "SCORED_IN", "title": "\u003cb\u003etotal_score\u003c/b\u003e: 80.0", "to": "course:1"}, {"arrows": "to", "detailMap": {"status": "returned"}, "from": "student:2", "id": "edge-13", "label": "BORROWED", "relationType": "BORROWED", "title": "\u003cb\u003estatus\u003c/b\u003e: returned", "to": "book:2"}, {"arrows": "to", "detailMap": {"progress": 55}, "from": "student:2", "id": "edge-14", "label": "HAS_TASK", "relationType": "HAS_TASK", "title": "\u003cb\u003eprogress\u003c/b\u003e: 55", "to": "task:2"}, {"arrows": "to", "detailMap": {}, "from": "major:\u8f6f\u4ef6\u5de5\u7a0b", "id": "edge-15", "label": "BELONGS_TO", "relationType": "BELONGS_TO", "title": "BELONGS_TO", "to": "college:\u8ba1\u7b97\u673a\u5b66\u9662"}, {"arrows": "to", "detailMap": {}, "from": "student:3", "id": "edge-16", "label": "MAJOR_IN", "relationType": "MAJOR_IN", "title": "MAJOR_IN", "to": "major:\u4fe1\u606f\u7ba1\u7406\u4e0e\u4fe1\u606f\u7cfb\u7edf"}, {"arrows": "to", "detailMap": {"selected_at": "2026-03-02 14:00:00", "status": "selected"}, "from": "student:3", "id": "edge-17", "label": "ENROLLED_IN", "relationType": "ENROLLED_IN", "title": "\u003cb\u003eselected_at\u003c/b\u003e: 2026-03-02 14:00:00\u003cbr\u003e\u003cb\u003estatus\u003c/b\u003e: selected", "to": "course:2"}, {"arrows": "to", "detailMap": {"total_score": 72.0}, "from": "student:3", "id": "edge-18", "label": "SCORED_IN", "relationType": "SCORED_IN", "title": "\u003cb\u003etotal_score\u003c/b\u003e: 72.0", "to": "course:2"}, {"arrows": "to", "detailMap": {"status": "borrowing"}, "from": "student:3", "id": "edge-19", "label": "BORROWED", "relationType": "BORROWED", "title": "\u003cb\u003estatus\u003c/b\u003e: borrowing", "to": "book:5"}, {"arrows": "to", "detailMap": {"progress": 40}, "from": "student:3", "id": "edge-20", "label": "HAS_TASK", "relationType": "HAS_TASK", "title": "\u003cb\u003eprogress\u003c/b\u003e: 40", "to": "task:3"}, {"arrows": "to", "detailMap": {"booking_date": "2026-04-09"}, "from": "student:3", "id": "edge-21", "label": "BOOKED_LAB", "relationType": "BOOKED_LAB", "title": "\u003cb\u003ebooking_date\u003c/b\u003e: 2026-04-09", "to": "lab:2"}, {"arrows": "to", "detailMap": {}, "from": "major:\u4fe1\u606f\u7ba1\u7406\u4e0e\u4fe1\u606f\u7cfb\u7edf", "id": "edge-22", "label": "BELONGS_TO", "relationType": "BELONGS_TO", "title": "BELONGS_TO", "to": "college:\u4fe1\u606f\u5b66\u9662"}, {"arrows": "to", "detailMap": {}, "from": "student:4", "id": "edge-23", "label": "MAJOR_IN", "relationType": "MAJOR_IN", "title": "MAJOR_IN", "to": "major:\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f"}, {"arrows": "to", "detailMap": {"selected_at": "2026-03-04 11:15:00", "status": "selected"}, "from": "student:4", "id": "edge-24", "label": "ENROLLED_IN", "relationType": "ENROLLED_IN", "title": "\u003cb\u003eselected_at\u003c/b\u003e: 2026-03-04 11:15:00\u003cbr\u003e\u003cb\u003estatus\u003c/b\u003e: selected", "to": "course:4"}, {"arrows": "to", "detailMap": {"total_score": 59.0}, "from": "student:4", "id": "edge-25", "label": "SCORED_IN", "relationType": "SCORED_IN", "title": "\u003cb\u003etotal_score\u003c/b\u003e: 59.0", "to": "course:4"}, {"arrows": "to", "detailMap": {}, "from": "major:\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f", "id": "edge-26", "label": "BELONGS_TO", "relationType": "BELONGS_TO", "title": "BELONGS_TO", "to": "college:\u4eba\u5de5\u667a\u80fd\u5b66\u9662"}, {"arrows": "to", "detailMap": {"classroom": "\u56fe\u4e66\u9986\u62a5\u544a\u5385", "term": "2025-2026-2"}, "from": "teacher:1", "id": "edge-27", "label": "TEACHES", "relationType": "TEACHES", "title": "\u003cb\u003eterm\u003c/b\u003e: 2025-2026-2\u003cbr\u003e\u003cb\u003eclassroom\u003c/b\u003e: \u56fe\u4e66\u9986\u62a5\u544a\u5385", "to": "course:4"}, {"arrows": "to", "detailMap": {"classroom": "\u535a\u5b66\u697c A305", "term": "2025-2026-2"}, "from": "teacher:2", "id": "edge-28", "label": "TEACHES", "relationType": "TEACHES", "title": "\u003cb\u003eterm\u003c/b\u003e: 2025-2026-2\u003cbr\u003e\u003cb\u003eclassroom\u003c/b\u003e: \u535a\u5b66\u697c A305", "to": "course:1"}, {"arrows": "to", "detailMap": {"classroom": "\u535a\u5b66\u697c B102", "term": "2025-2026-2"}, "from": "teacher:2", "id": "edge-29", "label": "TEACHES", "relationType": "TEACHES", "title": "\u003cb\u003eterm\u003c/b\u003e: 2025-2026-2\u003cbr\u003e\u003cb\u003eclassroom\u003c/b\u003e: \u535a\u5b66\u697c B102", "to": "course:2"}, {"arrows": "to", "detailMap": {"classroom": "\u81f4\u8fdc\u697c C201", "term": "2025-2026-2"}, "from": "teacher:3", "id": "edge-30", "label": "TEACHES", "relationType": "TEACHES", "title": "\u003cb\u003eterm\u003c/b\u003e: 2025-2026-2\u003cbr\u003e\u003cb\u003eclassroom\u003c/b\u003e: \u81f4\u8fdc\u697c C201", "to": "course:3"}, {"arrows": "to", "detailMap": {"classroom": "\u81f4\u8fdc\u697c B301", "term": "2025-2026-2"}, "from": "teacher:3", "id": "edge-31", "label": "TEACHES", "relationType": "TEACHES", "title": "\u003cb\u003eterm\u003c/b\u003e: 2025-2026-2\u003cbr\u003e\u003cb\u003eclassroom\u003c/b\u003e: \u81f4\u8fdc\u697c B301", "to": "course:5"}, {"arrows": "to", "detailMap": {}, "from": "book:1", "id": "edge-32", "label": "IN_CATEGORY", "relationType": "IN_CATEGORY", "title": "IN_CATEGORY", "to": "category:\u6559\u6750"}, {"arrows": "to", "detailMap": {}, "from": "book:2", "id": "edge-33", "label": "IN_CATEGORY", "relationType": "IN_CATEGORY", "title": "IN_CATEGORY", "to": "category:\u6280\u672f"}, {"arrows": "to", "detailMap": {}, "from": "book:3", "id": "edge-34", "label": "IN_CATEGORY", "relationType": "IN_CATEGORY", "title": "IN_CATEGORY", "to": "category:\u6280\u672f"}, {"arrows": "to", "detailMap": {}, "from": "book:4", "id": "edge-35", "label": "IN_CATEGORY", "relationType": "IN_CATEGORY", "title": "IN_CATEGORY", "to": "category:\u7ba1\u7406"}, {"arrows": "to", "detailMap": {}, "from": "book:5", "id": "edge-36", "label": "IN_CATEGORY", "relationType": "IN_CATEGORY", "title": "IN_CATEGORY", "to": "category:\u6280\u672f"}, {"arrows": "to", "detailMap": {}, "from": "lab:1", "id": "edge-37", "label": "SERVES_PROJECT", "relationType": "SERVES_PROJECT", "title": "SERVES_PROJECT", "to": "project:1"}, {"arrows": "to", "detailMap": {}, "from": "lab:2", "id": "edge-38", "label": "SERVES_PROJECT", "relationType": "SERVES_PROJECT", "title": "SERVES_PROJECT", "to": "project:2"}, {"arrows": "to", "detailMap": {}, "from": "task:1", "id": "edge-39", "label": "AT_BASE", "relationType": "AT_BASE", "title": "AT_BASE", "to": "base:\u6821\u56fe\u4e66\u9986\u6570\u5b57\u8d44\u6e90\u90e8"}, {"arrows": "to", "detailMap": {}, "from": "task:1", "id": "edge-40", "label": "GUIDED_BY", "relationType": "GUIDED_BY", "title": "GUIDED_BY", "to": "mentor:\u5218\u6d77\u71d5"}, {"arrows": "to", "detailMap": {}, "from": "task:2", "id": "edge-41", "label": "AT_BASE", "relationType": "AT_BASE", "title": "AT_BASE", "to": "base:\u5e02\u5927\u6570\u636e\u4e2d\u5fc3"}, {"arrows": "to", "detailMap": {}, "from": "task:2", "id": "edge-42", "label": "GUIDED_BY", "relationType": "GUIDED_BY", "title": "GUIDED_BY", "to": "mentor:\u5468\u7acb\u7fa4"}, {"arrows": "to", "detailMap": {}, "from": "task:3", "id": "edge-43", "label": "AT_BASE", "relationType": "AT_BASE", "title": "AT_BASE", "to": "base:\u6821\u56ed\u4fe1\u606f\u5316\u529e\u516c\u5ba4"}, {"arrows": "to", "detailMap": {}, "from": "task:3", "id": "edge-44", "label": "GUIDED_BY", "relationType": "GUIDED_BY", "title": "GUIDED_BY", "to": "mentor:\u8d75\u65b0\u5b87"}], "nodes": [{"detailMap": {"student_no": "20230001"}, "entityLabel": "Student", "group": "Student", "id": "student:1", "label": "\u5f20\u4e09", "searchText": "\u5f20\u4e09 student", "title": "\u003cb\u003eStudent\u003c/b\u003e\u003cbr\u003e\u003cb\u003estudent_no\u003c/b\u003e: 20230001"}, {"detailMap": {}, "entityLabel": "Major", "group": "Major", "id": "major:\u6570\u636e\u79d1\u5b66\u4e0e\u5927\u6570\u636e\u6280\u672f", "label": "\u6570\u636e\u79d1\u5b66\u4e0e\u5927\u6570\u636e\u6280\u672f", "searchText": "\u6570\u636e\u79d1\u5b66\u4e0e\u5927\u6570\u636e\u6280\u672f major", "title": "\u003cb\u003eMajor\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "College", "group": "College", "id": "college:\u8ba1\u7b97\u673a\u5b66\u9662", "label": "\u8ba1\u7b97\u673a\u5b66\u9662", "searchText": "\u8ba1\u7b97\u673a\u5b66\u9662 college", "title": "\u003cb\u003eCollege\u003c/b\u003e"}, {"detailMap": {"student_no": "20230002"}, "entityLabel": "Student", "group": "Student", "id": "student:2", "label": "\u674e\u56db", "searchText": "\u674e\u56db student", "title": "\u003cb\u003eStudent\u003c/b\u003e\u003cbr\u003e\u003cb\u003estudent_no\u003c/b\u003e: 20230002"}, {"detailMap": {}, "entityLabel": "Major", "group": "Major", "id": "major:\u8f6f\u4ef6\u5de5\u7a0b", "label": "\u8f6f\u4ef6\u5de5\u7a0b", "searchText": "\u8f6f\u4ef6\u5de5\u7a0b major", "title": "\u003cb\u003eMajor\u003c/b\u003e"}, {"detailMap": {"student_no": "20230003"}, "entityLabel": "Student", "group": "Student", "id": "student:3", "label": "\u738b\u654f", "searchText": "\u738b\u654f student", "title": "\u003cb\u003eStudent\u003c/b\u003e\u003cbr\u003e\u003cb\u003estudent_no\u003c/b\u003e: 20230003"}, {"detailMap": {}, "entityLabel": "Major", "group": "Major", "id": "major:\u4fe1\u606f\u7ba1\u7406\u4e0e\u4fe1\u606f\u7cfb\u7edf", "label": "\u4fe1\u606f\u7ba1\u7406\u4e0e\u4fe1\u606f\u7cfb\u7edf", "searchText": "\u4fe1\u606f\u7ba1\u7406\u4e0e\u4fe1\u606f\u7cfb\u7edf major", "title": "\u003cb\u003eMajor\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "College", "group": "College", "id": "college:\u4fe1\u606f\u5b66\u9662", "label": "\u4fe1\u606f\u5b66\u9662", "searchText": "\u4fe1\u606f\u5b66\u9662 college", "title": "\u003cb\u003eCollege\u003c/b\u003e"}, {"detailMap": {"student_no": "20230004"}, "entityLabel": "Student", "group": "Student", "id": "student:4", "label": "\u9648\u6668", "searchText": "\u9648\u6668 student", "title": "\u003cb\u003eStudent\u003c/b\u003e\u003cbr\u003e\u003cb\u003estudent_no\u003c/b\u003e: 20230004"}, {"detailMap": {}, "entityLabel": "Major", "group": "Major", "id": "major:\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f", "label": "\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f", "searchText": "\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f major", "title": "\u003cb\u003eMajor\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "College", "group": "College", "id": "college:\u4eba\u5de5\u667a\u80fd\u5b66\u9662", "label": "\u4eba\u5de5\u667a\u80fd\u5b66\u9662", "searchText": "\u4eba\u5de5\u667a\u80fd\u5b66\u9662 college", "title": "\u003cb\u003eCollege\u003c/b\u003e"}, {"detailMap": {"teacher_no": "T1001"}, "entityLabel": "Teacher", "group": "Teacher", "id": "teacher:1", "label": "\u5218\u6d77\u71d5", "searchText": "\u5218\u6d77\u71d5 teacher", "title": "\u003cb\u003eTeacher\u003c/b\u003e\u003cbr\u003e\u003cb\u003eteacher_no\u003c/b\u003e: T1001"}, {"detailMap": {"teacher_no": "T1002"}, "entityLabel": "Teacher", "group": "Teacher", "id": "teacher:2", "label": "\u5468\u7acb\u7fa4", "searchText": "\u5468\u7acb\u7fa4 teacher", "title": "\u003cb\u003eTeacher\u003c/b\u003e\u003cbr\u003e\u003cb\u003eteacher_no\u003c/b\u003e: T1002"}, {"detailMap": {"teacher_no": "T1003"}, "entityLabel": "Teacher", "group": "Teacher", "id": "teacher:3", "label": "\u8d75\u65b0\u5b87", "searchText": "\u8d75\u65b0\u5b87 teacher", "title": "\u003cb\u003eTeacher\u003c/b\u003e\u003cbr\u003e\u003cb\u003eteacher_no\u003c/b\u003e: T1003"}, {"detailMap": {"course_code": "BD301"}, "entityLabel": "Course", "group": "Course", "id": "course:1", "label": "\u5927\u6570\u636e\u7ba1\u7406", "searchText": "\u5927\u6570\u636e\u7ba1\u7406 course", "title": "\u003cb\u003eCourse\u003c/b\u003e\u003cbr\u003e\u003cb\u003ecourse_code\u003c/b\u003e: BD301"}, {"detailMap": {"course_code": "SE214"}, "entityLabel": "Course", "group": "Course", "id": "course:2", "label": "\u8f6f\u4ef6\u9700\u6c42\u5206\u6790", "searchText": "\u8f6f\u4ef6\u9700\u6c42\u5206\u6790 course", "title": "\u003cb\u003eCourse\u003c/b\u003e\u003cbr\u003e\u003cb\u003ecourse_code\u003c/b\u003e: SE214"}, {"detailMap": {"course_code": "AI220"}, "entityLabel": "Course", "group": "Course", "id": "course:3", "label": "\u673a\u5668\u5b66\u4e60\u5bfc\u8bba", "searchText": "\u673a\u5668\u5b66\u4e60\u5bfc\u8bba course", "title": "\u003cb\u003eCourse\u003c/b\u003e\u003cbr\u003e\u003cb\u003ecourse_code\u003c/b\u003e: AI220"}, {"detailMap": {"course_code": "IM305"}, "entityLabel": "Course", "group": "Course", "id": "course:4", "label": "\u4fe1\u606f\u8d44\u6e90\u7ec4\u7ec7", "searchText": "\u4fe1\u606f\u8d44\u6e90\u7ec4\u7ec7 course", "title": "\u003cb\u003eCourse\u003c/b\u003e\u003cbr\u003e\u003cb\u003ecourse_code\u003c/b\u003e: IM305"}, {"detailMap": {"course_code": "BD315"}, "entityLabel": "Course", "group": "Course", "id": "course:5", "label": "\u6570\u636e\u6316\u6398\u4e13\u9898", "searchText": "\u6570\u636e\u6316\u6398\u4e13\u9898 course", "title": "\u003cb\u003eCourse\u003c/b\u003e\u003cbr\u003e\u003cb\u003ecourse_code\u003c/b\u003e: BD315"}, {"detailMap": {"isbn": "9787302512345"}, "entityLabel": "Book", "group": "Book", "id": "book:1", "label": "\u6570\u636e\u5e93\u7cfb\u7edf\u6982\u8bba", "searchText": "\u6570\u636e\u5e93\u7cfb\u7edf\u6982\u8bba book", "title": "\u003cb\u003eBook\u003c/b\u003e\u003cbr\u003e\u003cb\u003eisbn\u003c/b\u003e: 9787302512345"}, {"detailMap": {}, "entityLabel": "Category", "group": "Category", "id": "category:\u6559\u6750", "label": "\u6559\u6750", "searchText": "\u6559\u6750 category", "title": "\u003cb\u003eCategory\u003c/b\u003e"}, {"detailMap": {"isbn": "9787111543210"}, "entityLabel": "Book", "group": "Book", "id": "book:2", "label": "Redis \u8bbe\u8ba1\u4e0e\u5b9e\u73b0", "searchText": "redis \u8bbe\u8ba1\u4e0e\u5b9e\u73b0 book", "title": "\u003cb\u003eBook\u003c/b\u003e\u003cbr\u003e\u003cb\u003eisbn\u003c/b\u003e: 9787111543210"}, {"detailMap": {}, "entityLabel": "Category", "group": "Category", "id": "category:\u6280\u672f", "label": "\u6280\u672f", "searchText": "\u6280\u672f category", "title": "\u003cb\u003eCategory\u003c/b\u003e"}, {"detailMap": {"isbn": "9787302657893"}, "entityLabel": "Book", "group": "Book", "id": "book:3", "label": "MongoDB \u6743\u5a01\u6307\u5357", "searchText": "mongodb \u6743\u5a01\u6307\u5357 book", "title": "\u003cb\u003eBook\u003c/b\u003e\u003cbr\u003e\u003cb\u003eisbn\u003c/b\u003e: 9787302657893"}, {"detailMap": {"isbn": "9787121450003"}, "entityLabel": "Book", "group": "Book", "id": "book:4", "label": "\u6570\u636e\u6cbb\u7406\u65b9\u6cd5\u8bba", "searchText": "\u6570\u636e\u6cbb\u7406\u65b9\u6cd5\u8bba book", "title": "\u003cb\u003eBook\u003c/b\u003e\u003cbr\u003e\u003cb\u003eisbn\u003c/b\u003e: 9787121450003"}, {"detailMap": {}, "entityLabel": "Category", "group": "Category", "id": "category:\u7ba1\u7406", "label": "\u7ba1\u7406", "searchText": "\u7ba1\u7406 category", "title": "\u003cb\u003eCategory\u003c/b\u003e"}, {"detailMap": {"isbn": "9787302580009"}, "entityLabel": "Book", "group": "Book", "id": "book:5", "label": "Python \u6570\u636e\u5206\u6790\u5b9e\u6218", "searchText": "python \u6570\u636e\u5206\u6790\u5b9e\u6218 book", "title": "\u003cb\u003eBook\u003c/b\u003e\u003cbr\u003e\u003cb\u003eisbn\u003c/b\u003e: 9787302580009"}, {"detailMap": {}, "entityLabel": "Project", "group": "Project", "id": "project:1", "label": "\u6821\u56ed\u80fd\u8017\u76d1\u6d4b\u770b\u677f", "searchText": "\u6821\u56ed\u80fd\u8017\u76d1\u6d4b\u770b\u677f project", "title": "\u003cb\u003eProject\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Project", "group": "Project", "id": "project:2", "label": "\u667a\u6167\u56fe\u4e66\u9986\u5ea7\u4f4d\u5206\u6790", "searchText": "\u667a\u6167\u56fe\u4e66\u9986\u5ea7\u4f4d\u5206\u6790 project", "title": "\u003cb\u003eProject\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Project", "group": "Project", "id": "project:3", "label": "\u4f01\u4e1a\u6570\u636e\u6cbb\u7406\u8c03\u7814", "searchText": "\u4f01\u4e1a\u6570\u636e\u6cbb\u7406\u8c03\u7814 project", "title": "\u003cb\u003eProject\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "LabRoom", "group": "LabRoom", "id": "lab:1", "label": "\u6570\u636e\u5b9e\u9a8c\u5ba4 A", "searchText": "\u6570\u636e\u5b9e\u9a8c\u5ba4 a labroom", "title": "\u003cb\u003eLabRoom\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "LabRoom", "group": "LabRoom", "id": "lab:2", "label": "\u534f\u540c\u521b\u65b0\u5ba4", "searchText": "\u534f\u540c\u521b\u65b0\u5ba4 labroom", "title": "\u003cb\u003eLabRoom\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "LabRoom", "group": "LabRoom", "id": "lab:3", "label": "\u4f01\u4e1a\u6c99\u76d8\u5ba4", "searchText": "\u4f01\u4e1a\u6c99\u76d8\u5ba4 labroom", "title": "\u003cb\u003eLabRoom\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Task", "group": "Task", "id": "task:1", "label": "\u9605\u8bfb\u884c\u4e3a\u753b\u50cf\u5206\u6790", "searchText": "\u9605\u8bfb\u884c\u4e3a\u753b\u50cf\u5206\u6790 task", "title": "\u003cb\u003eTask\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Base", "group": "Base", "id": "base:\u6821\u56fe\u4e66\u9986\u6570\u5b57\u8d44\u6e90\u90e8", "label": "\u6821\u56fe\u4e66\u9986\u6570\u5b57\u8d44\u6e90\u90e8", "searchText": "\u6821\u56fe\u4e66\u9986\u6570\u5b57\u8d44\u6e90\u90e8 base", "title": "\u003cb\u003eBase\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Mentor", "group": "Mentor", "id": "mentor:\u5218\u6d77\u71d5", "label": "\u5218\u6d77\u71d5", "searchText": "\u5218\u6d77\u71d5 mentor", "title": "\u003cb\u003eMentor\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Task", "group": "Task", "id": "task:2", "label": "\u9ad8\u6821\u6570\u636e\u76ee\u5f55\u68b3\u7406", "searchText": "\u9ad8\u6821\u6570\u636e\u76ee\u5f55\u68b3\u7406 task", "title": "\u003cb\u003eTask\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Base", "group": "Base", "id": "base:\u5e02\u5927\u6570\u636e\u4e2d\u5fc3", "label": "\u5e02\u5927\u6570\u636e\u4e2d\u5fc3", "searchText": "\u5e02\u5927\u6570\u636e\u4e2d\u5fc3 base", "title": "\u003cb\u003eBase\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Mentor", "group": "Mentor", "id": "mentor:\u5468\u7acb\u7fa4", "label": "\u5468\u7acb\u7fa4", "searchText": "\u5468\u7acb\u7fa4 mentor", "title": "\u003cb\u003eMentor\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Task", "group": "Task", "id": "task:3", "label": "\u5b9e\u9a8c\u8bfe\u9884\u7ea6\u4f18\u5316", "searchText": "\u5b9e\u9a8c\u8bfe\u9884\u7ea6\u4f18\u5316 task", "title": "\u003cb\u003eTask\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Base", "group": "Base", "id": "base:\u6821\u56ed\u4fe1\u606f\u5316\u529e\u516c\u5ba4", "label": "\u6821\u56ed\u4fe1\u606f\u5316\u529e\u516c\u5ba4", "searchText": "\u6821\u56ed\u4fe1\u606f\u5316\u529e\u516c\u5ba4 base", "title": "\u003cb\u003eBase\u003c/b\u003e"}, {"detailMap": {}, "entityLabel": "Mentor", "group": "Mentor", "id": "mentor:\u8d75\u65b0\u5b87", "label": "\u8d75\u65b0\u5b87", "searchText": "\u8d75\u65b0\u5b87 mentor", "title": "\u003cb\u003eMentor\u003c/b\u003e"}]};
+        var selectedStudentNodeId = "student:2";
+        var container = document.getElementById('mynetwork');
+        var selectionPanel = document.getElementById('graph-selection');
+        var searchInput = document.getElementById('graph-search');
+        if (!container || !selectionPanel || !searchInput || typeof vis === 'undefined') {
+            if (selectionPanel) {
+                selectionPanel.innerHTML = '<strong>图谱资源未就绪</strong><span>请刷新页面后重试。</span><small>当前未能加载 Vis.js 或目标容器。</small>';
+            }
+            return;
+        }
+        if (!rawData.nodes || !rawData.nodes.length) {
+            selectionPanel.innerHTML = '<strong>暂无图谱数据</strong><span>当前没有可展示的节点。</span><small>请先检查图谱数据生成流程。</small>';
+            return;
+        }
+        var baseNodes = rawData.nodes.map(function(node) { return Object.assign({}, node); });
+        var baseEdges = rawData.edges.map(function(edge) { return Object.assign({}, edge); });
+        var nodeIndex = new Map(baseNodes.map(function(node) { return [node.id, node]; }));
+        var edgeIndex = new Map(baseEdges.map(function(edge) { return [edge.id, edge]; }));
+        var hiddenNodeIds = new Set();
+        var labelsVisible = true;
+        var physicsEnabled = true;
+
+        var data = {
+            nodes: new vis.DataSet(baseNodes),
+            edges: new vis.DataSet(baseEdges)
+        };
+        var options = {
+            nodes: {
+                shape: 'dot',
+                size: 16,
+                font: { size: 12, color: '#334155', face: 'system-ui' },
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                width: 1,
+                color: { inherit: 'from', opacity: 0.6 },
+                smooth: { type: 'continuous' },
+                font: { size: 10, color: '#64748b', align: 'middle' }
+            },
+            physics: {
+                forceAtlas2Based: {
+                    gravitationalConstant: -26,
+                    centralGravity: 0.005,
+                    springLength: 230,
+                    springConstant: 0.18
+                },
+                maxVelocity: 146,
+                solver: 'forceAtlas2Based',
+                timestep: 0.35,
+                stabilization: { iterations: 150 }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200,
+                hideEdgesOnDrag: true
+            },
+            groups: {
+                Student: { color: { background: '#3b82f6', border: '#2563eb' } },
+                Course: { color: { background: '#10b981', border: '#059669' } },
+                Teacher: { color: { background: '#8b5cf6', border: '#7c3aed' } },
+                Book: { color: { background: '#f59e0b', border: '#d97706' } },
+                Category: { color: { background: '#ef4444', border: '#dc2626' } },
+                Task: { color: { background: '#ec4899', border: '#db2777' } },
+                LabRoom: { color: { background: '#06b6d4', border: '#0891b2' } }
+            }
+        };
+        var network = new vis.Network(container, data, options);
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, function(character) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[character];
+            });
+        }
+
+        function setSelectionContent(title, subtitle, details, connectedCount) {
+            var detailLines = (details || []).map(function(item) {
+                return '<li><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.value) + '</span></li>';
+            }).join('');
+            selectionPanel.innerHTML = [
+                '<strong>' + escapeHtml(title) + '</strong>',
+                '<span>' + escapeHtml(subtitle) + '</span>',
+                '<small>关联节点 ' + escapeHtml(connectedCount) + ' 个</small>',
+                detailLines ? '<ul class="graph-detail-list">' + detailLines + '</ul>' : '<small>当前节点没有额外属性。</small>'
+            ].join('');
+        }
+
+        function renderNodeDetails(nodeId) {
+            var node = nodeIndex.get(nodeId);
+            if (!node) {
+                setSelectionContent('李四', '默认分析学生', [], 0);
+                return;
+            }
+            var details = Object.entries(node.detailMap || {}).map(function(entry) {
+                return { label: entry[0], value: String(entry[1]) };
+            });
+            setSelectionContent(
+                node.label,
+                node.entityLabel || node.group || 'Entity',
+                details,
+                network.getConnectedNodes(nodeId).length
+            );
+        }
+
+        function renderEdgeDetails(edgeId) {
+            var edge = edgeIndex.get(edgeId);
+            if (!edge) {
+                renderNodeDetails(selectedStudentNodeId);
+                return;
+            }
+            var fromNode = nodeIndex.get(edge.from);
+            var toNode = nodeIndex.get(edge.to);
+            var details = [
+                { label: '起点节点', value: fromNode ? fromNode.label : edge.from },
+                { label: '终点节点', value: toNode ? toNode.label : edge.to }
+            ];
+            Object.entries(edge.detailMap || {}).forEach(function(entry) {
+                details.push({ label: entry[0], value: String(entry[1]) });
+            });
+            setSelectionContent(
+                edge.relationType || '关系',
+                (fromNode ? fromNode.label : edge.from) + ' -> ' + (toNode ? toNode.label : edge.to),
+                details,
+                2
+            );
+        }
+
+        function focusNode(nodeId) {
+            if (!nodeIndex.has(nodeId)) {
+                return;
+            }
+            network.selectNodes([nodeId]);
+            network.focus(nodeId, {
+                scale: 1.05,
+                animation: { duration: 500, easingFunction: 'easeInOutQuad' }
+            });
+            renderNodeDetails(nodeId);
+        }
+
+        function resetVisibility() {
+            hiddenNodeIds.clear();
+            data.nodes.update(baseNodes.map(function(node) {
+                return { id: node.id, hidden: false };
+            }));
+            data.edges.update(baseEdges.map(function(edge) {
+                return { id: edge.id, hidden: false, label: labelsVisible ? edge.relationType : '' };
+            }));
+        }
+
+        function searchAndFocus() {
+            var keyword = (searchInput.value || '').trim().toLowerCase();
+            if (!keyword) {
+                focusNode(selectedStudentNodeId);
+                return;
+            }
+            var matchedNode = baseNodes.find(function(node) {
+                return (node.searchText || '').indexOf(keyword) !== -1;
+            });
+            if (!matchedNode) {
+                setSelectionContent('未找到匹配节点', '请尝试输入学生、课程、教师或图书名中的关键词。', [], 0);
+                return;
+            }
+            resetVisibility();
+            var visibleIds = new Set([matchedNode.id].concat(network.getConnectedNodes(matchedNode.id)));
+            hiddenNodeIds = new Set(baseNodes.filter(function(node) {
+                return !visibleIds.has(node.id);
+            }).map(function(node) {
+                return node.id;
+            }));
+            data.nodes.update(baseNodes.map(function(node) {
+                return { id: node.id, hidden: hiddenNodeIds.has(node.id) };
+            }));
+            data.edges.update(baseEdges.map(function(edge) {
+                var visible = visibleIds.has(edge.from) && visibleIds.has(edge.to);
+                return { id: edge.id, hidden: !visible, label: labelsVisible && visible ? edge.relationType : '' };
+            }));
+            focusNode(matchedNode.id);
+        }
+
+        network.on('click', function(params) {
+            if (params.nodes.length) {
+                renderNodeDetails(params.nodes[0]);
+            } else if (params.edges.length) {
+                renderEdgeDetails(params.edges[0]);
+            } else {
+                network.unselectAll();
+                renderNodeDetails(selectedStudentNodeId);
+            }
+        });
+
+        document.querySelectorAll('[data-graph-action]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var action = button.getAttribute('data-graph-action');
+                if (action === 'fit') {
+                    resetVisibility();
+                    network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+                } else if (action === 'focus-student') {
+                    resetVisibility();
+                    focusNode(selectedStudentNodeId);
+                } else if (action === 'toggle-physics') {
+                    physicsEnabled = !physicsEnabled;
+                    network.setOptions({ physics: { enabled: physicsEnabled } });
+                    button.textContent = physicsEnabled ? '关闭布局' : '恢复布局';
+                } else if (action === 'toggle-edge-labels') {
+                    labelsVisible = !labelsVisible;
+                    data.edges.update(baseEdges.map(function(edge) {
+                        return { id: edge.id, label: labelsVisible && !hiddenNodeIds.has(edge.from) && !hiddenNodeIds.has(edge.to) ? edge.relationType : '' };
+                    }));
+                    button.textContent = labelsVisible ? '隐藏关系标签' : '显示关系标签';
+                } else if (action === 'search-node') {
+                    searchAndFocus();
+                } else if (action === 'clear-selection') {
+                    searchInput.value = '';
+                    resetVisibility();
+                    network.unselectAll();
+                    focusNode(selectedStudentNodeId);
+                }
+            });
+        });
+
+        searchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchAndFocus();
+            }
+        });
+
+        network.once('stabilizationIterationsDone', function() {
+            focusNode(selectedStudentNodeId);
+        });
+    });
+  </script>
+</section>
+
+<section class="section-grid two-up" id="graph-summary">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>节点类型分布</h3>
+      <p>这部分对应图数据库中的顶点类型设计，用于观察图模型的实体边界。</p>
+    </div>
+    <div class="rank-bar-list">
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Book</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.904761904761903%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Course</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.904761904761903%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Major</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 9.523809523809524%"></span>
+          </div>
+          <em>4</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Student</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 9.523809523809524%"></span>
+          </div>
+          <em>4</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Base</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Category</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>College</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>LabRoom</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Mentor</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Project</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Task</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>Teacher</strong>
+            <span>图模型中的节点类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 7.142857142857142%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>关系类型分布</h3>
+      <p>这里能说明为什么图数据库擅长多对多和多跳查询，不需要像关系库那样反复 Join。</p>
+    </div>
+    <div class="rank-bar-list">
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>ENROLLED_IN</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.363636363636363%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>IN_CATEGORY</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.363636363636363%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>SCORED_IN</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.363636363636363%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>TEACHES</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 11.363636363636363%"></span>
+          </div>
+          <em>5</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>BELONGS_TO</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 9.090909090909092%"></span>
+          </div>
+          <em>4</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>MAJOR_IN</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 9.090909090909092%"></span>
+          </div>
+          <em>4</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>AT_BASE</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 6.8181818181818175%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>BORROWED</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 6.8181818181818175%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>GUIDED_BY</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 6.8181818181818175%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>HAS_TASK</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 6.8181818181818175%"></span>
+          </div>
+          <em>3</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>BOOKED_LAB</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 4.545454545454546%"></span>
+          </div>
+          <em>2</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>SERVES_PROJECT</strong>
+            <span>图模型中的边类型</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 4.545454545454546%"></span>
+          </div>
+          <em>2</em>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="graph-recommendation">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图谱课程推荐</h3>
+      <p>基于“学生-课程-学生-课程”的多跳路径生成推荐，这是图数据库最容易讲出优势的场景。</p>
+    </div>
+    <div class="warning-grid">
+      
+        <div class="warning-card alt">
+          <strong>机器学习导论</strong>
+          <span>支持度 1</span>
+          <small>相似学生：张三</small>
+          <small>李四 -&gt; 大数据管理 &lt;- 张三 -&gt; 机器学习导论</small>
+        </div>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图谱图书推荐</h3>
+      <p>把借阅行为和分类边连接起来，可自然演示“读者-图书-类别”图模型。</p>
+    </div>
+    <div class="warning-grid">
+      
+        <div class="warning-card">
+          <strong>Python 数据分析实战</strong>
+          <span>技术</span>
+          <small>同类借阅热度 1</small>
+        </div>
+      
+        <div class="warning-card">
+          <strong>MongoDB 权威指南</strong>
+          <span>技术</span>
+          <small>同类借阅热度 0</small>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>多跳路径展示</h3>
+      <p>这里展示学生、课程、图书和实践任务之间的多跳关系路径。</p>
+    </div>
+    <div class="timeline">
+      
+        <div class="timeline-item">
+          <strong>实践路径</strong>
+          <span>李四 -&gt; 高校数据目录梳理 -&gt; 市大数据中心</span>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>导师路径</strong>
+          <span>李四 -&gt; 高校数据目录梳理 -&gt; 周立群</span>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>选课推荐路径</strong>
+          <span>李四 -&gt; 大数据管理 &lt;- 张三 -&gt; 机器学习导论</span>
+        </div>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>PageRank 中心性</h3>
+      <p>相比只看度数，这里更接近图算法口径，能说明哪些节点在关系传播里更关键。</p>
+    </div>
+    <div class="rank-bar-list">
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>技术</strong>
+            <span>Category · 度数 3</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 99.52%"></span>
+          </div>
+          <em>0.0622</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>计算机学院</strong>
+            <span>College · 度数 2</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 76.48%"></span>
+          </div>
+          <em>0.0478</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>信息资源组织</strong>
+            <span>Course · 度数 3</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 63.04%"></span>
+          </div>
+          <em>0.0394</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>人工智能学院</strong>
+            <span>College · 度数 1</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 54.559999999999995%"></span>
+          </div>
+          <em>0.0341</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>大数据管理</strong>
+            <span>Course · 度数 5</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 51.519999999999996%"></span>
+          </div>
+          <em>0.0322</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>信息学院</strong>
+            <span>College · 度数 1</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 51.35999999999999%"></span>
+          </div>
+          <em>0.0321</em>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h3>跨子系统关联最强学生</h3>
+    <p>把教务、图书馆、实践三类关系叠加后，可以快速找出最适合做推荐、画像或预警分析的学生。</p>
+  </div>
+  <div class="warning-grid">
+    
+      <div class="warning-card alt">
+        <strong>张三</strong>
+        <span>20230001</span>
+        <small>覆盖子系统 3 个</small>
+        <small>教务 2 · 图书 1 · 实践 2 · 综合分 42</small>
+      </div>
+    
+      <div class="warning-card alt">
+        <strong>王敏</strong>
+        <span>20230003</span>
+        <small>覆盖子系统 3 个</small>
+        <small>教务 1 · 图书 1 · 实践 2 · 综合分 40</small>
+      </div>
+    
+      <div class="warning-card alt">
+        <strong>李四</strong>
+        <span>20230002</span>
+        <small>覆盖子系统 3 个</small>
+        <small>教务 1 · 图书 1 · 实践 1 · 综合分 37</small>
+      </div>
+    
+      <div class="warning-card alt">
+        <strong>陈晨</strong>
+        <span>20230004</span>
+        <small>覆盖子系统 1 个</small>
+        <small>教务 1 · 图书 0 · 实践 0 · 综合分 12</small>
+      </div>
+    
+  </div>
+</section>
+
+<section class="panel" id="graph-cypher">
+  <div class="panel-heading">
+    <h3>Cypher 查询范例</h3>
+    <p>系统会自动导出可执行的 Cypher 脚本，以下语句用于展示图模型中的典型查询方式。</p>
+  </div>
+  <div class="stacked-blocks">
+    
+      <div class="stack-block">
+        <code>MATCH (s:Student {studentNo: &#39;20230002&#39;})-[:ENROLLED_IN]-&gt;(c:Course)&lt;-[:ENROLLED_IN]-(peer:Student)-[:ENROLLED_IN]-&gt;(rec:Course) WHERE NOT (s)-[:ENROLLED_IN]-&gt;(rec) RETURN rec.courseName, count(DISTINCT peer) AS support ORDER BY support DESC LIMIT 5</code>
+      </div>
+    
+      <div class="stack-block">
+        <code>MATCH (s:Student {studentNo: &#39;20230002&#39;})-[:BORROWED]-&gt;(:Book)-[:IN_CATEGORY]-&gt;(cat:Category)&lt;-[:IN_CATEGORY]-(book:Book) WHERE NOT (s)-[:BORROWED]-&gt;(book) RETURN cat.name, book.title LIMIT 5</code>
+      </div>
+    
+      <div class="stack-block">
+        <code>MATCH p = (s:Student {studentNo: &#39;20230002&#39;})-[:HAS_TASK]-&gt;(:Task)-[:GUIDED_BY|AT_BASE]-&gt;() RETURN p LIMIT 5</code>
+      </div>
+    
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>当前图谱运行方式</h3>
+      <p>图谱模块默认采用本地图分析与 Cypher 导出双轨模式，便于在单机环境中直接运行。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>本地图分析</h4>
+        <p>当前页面使用本地图模型完成推荐、路径分析和中心性计算，不依赖外部图数据库即可展示关系逻辑。</p>
+      </div>
+      <div class="stack-block">
+        <h4>Cypher 导出</h4>
+        <p>系统会自动生成 `smart_campus_graph.cypher`，并支持在上方一键复制导出路径，便于后续把相同节点和关系导入 Neo4j。</p>
+      </div>
+      <div class="stack-block">
+        <h4>统一业务键</h4>
+        <p>学生学号、课程编码、图书分类和项目任务等业务键会直接映射到图节点与关系中，减少重复建模成本。</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Neo4j 切换说明</h3>
+      <p>图谱逻辑已经和连接方式解耦，后续如需接入 Neo4j，只需要补充连接配置即可。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>配置入口</h4>
+        <p>系统支持从环境变量或 `neo4j_runtime.json` 读取连接地址、用户名和密码。</p>
+      </div>
+      <div class="stack-block">
+        <h4>切换结果</h4>
+        <p>连接可用时会从本地图分析模式切换到 Neo4j 在线模式，并直接把 Cypher 脚本同步执行到图数据库中。</p>
+      </div>
+      <div class="stack-block">
+        <h4>当前状态</h4>
+        <p>Neo4j 已连接（bolt://127.0.0.1:7687）。这种设计适合单机演示，也便于后续迁移到真实图数据库集群。</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+      </main>
+
+      <footer class="footer">
+        <p>技术结构：SQLite 负责事务层，Redis 负责缓存与排行，MongoDB 负责日志、画像和文档扩展，图谱模块负责关系抽象与 Cypher 导出。</p>
+      </footer>
+    </div>
+  </div>
+  <script src="./static/app.js"></script>
+</body>
+</html>

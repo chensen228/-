@@ -1,0 +1,1240 @@
+<!doctype html>
+
+  
+  
+  
+
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数据中心 | 智慧校园大数据管理演示系统</title>
+  <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+  <div class="workspace-shell">
+    <aside class="workspace-sidebar">
+      <section class="sidebar-brand">
+        <p class="brand-kicker">Campus Data Operations Desk</p>
+        <h1>智慧校园大数据管理演示系统</h1>
+        <p>覆盖图书馆、教务、实践教学三类核心场景，并提供治理分析与图谱分析模块。</p>
+      </section>
+
+      <section class="sidebar-status">
+        <article class="status-card">
+          <span>Redis 运行态</span>
+          <strong>真实 Redis（127.0.0.1:6379/db0）</strong>
+          <small>127.0.0.1:6379 / db0</small>
+        </article>
+        <article class="status-card">
+          <span>Mongo 运行态</span>
+          <strong>真实 MongoDB（127.0.0.1:27017/smart_campus）</strong>
+          <small>文档留痕、Geo、TTL、GridFS 与质量快照</small>
+        </article>
+        <article class="status-card">
+          <span>图谱运行态</span>
+          <strong>Neo4j 已连接（bolt://127.0.0.1:7687）</strong>
+          <small>Cypher 导出、推荐关系和中心性分析</small>
+        </article>
+      </section>
+
+      <nav class="side-nav" aria-label="主导航">
+        <div class="nav-group">
+          <p class="nav-caption">核心演示</p>
+          <a href="./index.html" class="side-nav-link ">
+            <span>总览</span>
+            <small>系统态势、模块入口与整体架构</small>
+          </a>
+          <a href="./library.html" class="side-nav-link ">
+            <span>智慧图书馆</span>
+            <small>借阅、检索、预约和多粒度排行榜</small>
+          </a>
+          <a href="./academic.html" class="side-nav-link ">
+            <span>智慧教务</span>
+            <small>选课供需、容量缓存与学业预警</small>
+          </a>
+          <a href="./practice.html" class="side-nav-link ">
+            <span>实践教学平台</span>
+            <small>预约、签到、周报与任务推进</small>
+          </a>
+          <a href="./data-center.html" class="side-nav-link active">
+            <span>数据中心</span>
+            <small>多数据库落点、缓存键和文档集合</small>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-caption">扩展模块</p>
+          <a href="./governance-lab.html" class="side-nav-link ">
+            <span>数据治理实验室</span>
+            <small>主数据、质量评分、治理规则和血缘</small>
+          </a>
+          <a href="./graph-lab.html" class="side-nav-link ">
+            <span>图谱创新实验室</span>
+            <small>图模型、推荐、路径分析和中心性</small>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="workspace-main">
+      <header class="topbar">
+        <div class="page-intro">
+          <p class="brand-kicker">Operations Hub</p>
+          <h2>多数据库协同观测台</h2>
+          <p>从统计口径、缓存键、文档集合、治理快照到图谱扩展，统一展示多类数据的分层落点。</p>
+        </div>
+        <div class="topbar-side">
+          <div class="topbar-mini-grid">
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>核心子系统</span>
+            </article>
+            <article class="mini-stat">
+              <strong>3</strong>
+              <span>数据库角色</span>
+            </article>
+            <article class="mini-stat">
+              <strong>2</strong>
+              <span>扩展实验室</span>
+            </article>
+          </div>
+          <div class="runtime-badges">
+            <span class="pill pill-good">真实 Redis（127.0.0.1:6379/db0）</span>
+            <span class="pill pill-good">真实 MongoDB（127.0.0.1:27017/smart_campus）</span>
+            <span class="pill pill-good">Neo4j 已连接（bolt://127.0.0.1:7687）</span>
+          </div>
+          <form onsubmit="alert(\'云端静态展示切片仅支持数据预览与图谱交互，无法进行真实的数据库写入操作。如需体验请部署本地完整版。\'); return false;">
+            <button type="submit" class="ghost-button" data-confirm="确定要重置全部演示数据吗？">重置演示数据</button>
+          </form>
+        </div>
+      </header>
+
+      
+<nav class="page-subnav" aria-label="数据中心页导航">
+  <a href="#data-scope">观测范围</a>
+  <a href="#data-governance">治理摘要</a>
+  <a href="#data-redis">Redis 键空间</a>
+  <a href="#data-mongo">Mongo 能力</a>
+  <a href="#data-graph">图谱快照</a>
+</nav>
+
+
+      
+        
+      
+
+      <main class="main-content">
+        
+<section class="subsystem-hero data-tone">
+  <div>
+    <p class="eyebrow">Data Center</p>
+    <h2>多数据库协同观测台</h2>
+    <p>这一页用于集中观察数据落点、分层方式和各类数据库中的实际内容。</p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">SQL 统计口径</span>
+    <span class="pill">Redis 键快照</span>
+    <span class="pill">Mongo 文档集合</span>
+    <span class="pill">图谱扩展</span>
+    <span class="pill pill-good">真实 Redis（127.0.0.1:6379/db0）</span>
+    <span class="pill pill-good">真实 MongoDB（127.0.0.1:27017/smart_campus）</span>
+  </div>
+</section>
+
+<section class="section-grid three-up">
+  
+    <article class="feature-card stat-panel">
+      <h3>4</h3>
+      <p>students</p>
+    </article>
+  
+    <article class="feature-card stat-panel">
+      <h3>3</h3>
+      <p>borrow_records</p>
+    </article>
+  
+    <article class="feature-card stat-panel">
+      <h3>5</h3>
+      <p>course_selections</p>
+    </article>
+  
+    <article class="feature-card stat-panel">
+      <h3>3</h3>
+      <p>internship_tasks</p>
+    </article>
+  
+    <article class="feature-card stat-panel">
+      <h3>2</h3>
+      <p>weekly_reports</p>
+    </article>
+  
+</section>
+
+<section class="insight-strip">
+  <article class="insight-card">
+    <span>Redis 键数量</span>
+    <strong>16</strong>
+    <small>覆盖排行、配额、进度和状态摘要</small>
+  </article>
+  <article class="insight-card">
+    <span>Mongo 集合数</span>
+    <strong>7</strong>
+    <small>含日志、画像、风险、GridFS 等集合</small>
+  </article>
+  <article class="insight-card">
+    <span>治理得分</span>
+    <strong>100.0</strong>
+    <small>当前主数据综合质量评分</small>
+  </article>
+  <article class="insight-card">
+    <span>图谱节点</span>
+    <strong>42</strong>
+    <small>当前统一图模型中的节点数量</small>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="data-scope">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>数据观测范围</h3>
+      <p>页面按事务层、缓存层、文档层和图谱分析结果组织，便于查看各类数据的实际落点。</p>
+    </div>
+    <div class="route-list">
+      <span class="step-pill">1. SQL 统计摘要展示核心业务数据规模。</span>
+      <span class="step-pill">2. Redis 键空间展示排行榜、配额和状态缓存。</span>
+      <span class="step-pill">3. Mongo 文档集合展示日志、画像和过程材料。</span>
+      <span class="step-pill">4. 治理摘要展示主数据与质量快照。</span>
+      <span class="step-pill">5. 图数据库快照展示节点、关系与推荐结果。</span>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>分析模块概览</h3>
+      <p>系统在业务处理之外，还提供排行、治理和图谱三类分析视图。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>多粒度排行榜体系</h4>
+        <p>图书馆新增日榜、周榜、月榜、总榜和分类榜，教务、实践也增加跨系统排行。</p>
+      </div>
+      <div class="stack-block">
+        <h4>数据治理视角</h4>
+        <p>主数据目录、质量规则、评分维度和血缘链路已进入系统，而不是只写在报告里。</p>
+      </div>
+      <div class="stack-block">
+        <h4>图谱扩展视角</h4>
+        <p>在原有三子系统基础上增加图关系、推荐路径和中心性分析，让项目更有延展性。</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="data-governance">
+  <div class="panel-heading">
+    <h3>数据治理摘要</h3>
+    <p>这一块集中展示主数据管理和数据质量治理的整体状态。</p>
+  </div>
+  <div class="warning-grid">
+    <div class="warning-card alt">
+      <strong>100.0</strong>
+      <span>主数据综合质量分</span>
+      <small>评级：优秀</small>
+    </div>
+    <div class="warning-card">
+      <strong>5</strong>
+      <span>核心主数据实体</span>
+      <small>学生、教师、课程、图书、空间</small>
+    </div>
+    <div class="warning-card alt">
+      <strong>31</strong>
+      <span>治理覆盖记录量</span>
+      <small>含 SQL 主数据与 Mongo Geo 空间</small>
+    </div>
+    <div class="warning-card">
+      <strong>2026-05-24 12:33:02</strong>
+      <span>质量快照生成时间</span>
+      <small>已同步写入 MongoDB</small>
+    </div>
+  </div>
+  <a href="./governance-lab.html" class="secondary-button">进入数据治理实验室</a>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>跨库一致性策略</h3>
+      <p>系统在跨 SQLite、Redis 和 MongoDB 写入时，优先保证事务层正确，再同步刷新缓存与文档留痕。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>事务主库优先</h4>
+        <p>借阅、选课、预约等核心写操作先落到 SQLite，确保库存、容量和资源占用等关键状态正确。</p>
+      </div>
+      <div class="stack-block">
+        <h4>缓存与文档后续同步</h4>
+        <p>事务成功后再更新 Redis 排行榜、配额摘要，并写入 MongoDB 行为日志、变更记录和画像文档。</p>
+      </div>
+      <div class="stack-block">
+        <h4>补偿与重建</h4>
+        <p>系统保留从事务数据重建 Redis 排行和摘要的能力，适合解释最终一致性与缓存补偿策略。</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>数据分层与并发扩展</h3>
+      <p>除了当前演示结构，系统也预留了面向更大数据量和更高并发场景的演进方向。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>冷热数据分层</h4>
+        <p>Redis 保存日常热点数据，MongoDB 保存近阶段过程文档，历史日志可继续归档到 HDFS 或对象存储。</p>
+      </div>
+      <div class="stack-block">
+        <h4>消息队列削峰</h4>
+        <p>在抢课等高并发场景中，可在 Web 层和事务层之间增加 Kafka 或 RabbitMQ，对请求进行排队与限速消费。</p>
+      </div>
+      <div class="stack-block">
+        <h4>统一观测入口</h4>
+        <p>数据中心集中展示 SQL、Redis、Mongo 和图谱结果，便于观察分层后的实际数据落点与运行状态。</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <h3>排行榜键策略看板</h3>
+    <p>观察窗口：2026-04-02 10:00。这里集中展示多个 Redis Key 的组织方式、过期策略和更新节奏。</p>
+  </div>
+  <div class="catalog-grid">
+    
+      <article class="catalog-card">
+        <strong>图书日榜</strong>
+        <code>rank:book:20260402</code>
+        <p>适合课堂展示当天热门图书。</p>
+        <small>过期策略：24 小时后自动淘汰</small>
+        <small>更新时机：每次借阅实时更新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>图书周榜</strong>
+        <code>rank:book:2026wk14</code>
+        <p>便于汇报一周阅读热点。</p>
+        <small>过期策略：7 天后自动淘汰</small>
+        <small>更新时机：日汇总 + 借阅增量刷新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>图书月榜</strong>
+        <code>rank:book:202604</code>
+        <p>用于月度阅读分析。</p>
+        <small>过期策略：30 天后自动淘汰</small>
+        <small>更新时机：日汇总 + 借阅增量刷新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>图书总榜</strong>
+        <code>rank:book:total</code>
+        <p>用于查看累计借阅热度。</p>
+        <small>过期策略：长期保留</small>
+        <small>更新时机：每次借阅实时更新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>图书分类日榜</strong>
+        <code>rank:book:category:技术:20260402</code>
+        <p>便于比较技术类、管理类等细分阅读倾向。</p>
+        <small>过期策略：24 小时后自动淘汰</small>
+        <small>更新时机：同分类借阅实时更新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>课程热选榜</strong>
+        <code>rank:course:current</code>
+        <p>展示教务侧的供需热度。</p>
+        <small>过期策略：长期保留</small>
+        <small>更新时机：选课/退课实时调整</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>实验室利用榜</strong>
+        <code>rank:practice:lab:usage</code>
+        <p>突出实践平台的资源利用分析。</p>
+        <small>过期策略：长期保留</small>
+        <small>更新时机：预约成功实时更新</small>
+      </article>
+    
+      <article class="catalog-card">
+        <strong>任务推进榜</strong>
+        <code>rank:practice:progress</code>
+        <p>适合讲过程管理和项目追踪。</p>
+        <small>过期策略：长期保留</small>
+        <small>更新时机：周报提交后实时更新</small>
+      </article>
+    
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>活跃图书榜单快照</h3>
+      <p>图书借阅事件会同步进入多个时间窗口，形成不同粒度的热度快照。</p>
+    </div>
+    <div class="leaderboard-deck compact">
+      
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>日借阅榜</h4>
+              <p>统计窗口 2026-04-02</p>
+            </div>
+            <span class="pill">24 小时自动淘汰</span>
+          </div>
+          <code class="board-key">rank:book:20260402</code>
+          <div class="rank-bar-list">
+            
+              <p class="empty-state">暂无数据</p>
+            
+          </div>
+        </article>
+      
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>周借阅榜</h4>
+              <p>统计窗口 2026wk14</p>
+            </div>
+            <span class="pill">7 天后自动淘汰</span>
+          </div>
+          <code class="board-key">rank:book:2026wk14</code>
+          <div class="rank-bar-list">
+            
+              <p class="empty-state">暂无数据</p>
+            
+          </div>
+        </article>
+      
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>月借阅榜</h4>
+              <p>统计窗口 2026-04</p>
+            </div>
+            <span class="pill">30 天后自动淘汰</span>
+          </div>
+          <code class="board-key">rank:book:202604</code>
+          <div class="rank-bar-list">
+            
+              <p class="empty-state">暂无数据</p>
+            
+          </div>
+        </article>
+      
+        <article class="board-card">
+          <div class="board-head">
+            <div>
+              <h4>总借阅榜</h4>
+              <p>累计借阅热度</p>
+            </div>
+            <span class="pill">长期保留</span>
+          </div>
+          <code class="board-key">rank:book:total</code>
+          <div class="rank-bar-list">
+            
+              <div class="rank-bar-row slim">
+                <div class="rank-copy">
+                  <strong>Python 数据分析实战</strong>
+                  <span>技术</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: 100%"></span>
+                </div>
+                <em>1</em>
+              </div>
+            
+              <div class="rank-bar-row slim">
+                <div class="rank-copy">
+                  <strong>Redis 设计与实现</strong>
+                  <span>技术</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: 100%"></span>
+                </div>
+                <em>1</em>
+              </div>
+            
+              <div class="rank-bar-row slim">
+                <div class="rank-copy">
+                  <strong>数据库系统概论</strong>
+                  <span>教材</span>
+                </div>
+                <div class="rank-meter">
+                  <span style="width: 100%"></span>
+                </div>
+                <em>1</em>
+              </div>
+            
+          </div>
+        </article>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>跨系统扩展排行</h3>
+      <p>除图书馆外，教务和实践平台也都补上了可讲解的数据榜单。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>课程热选榜</h4>
+        <div class="rank-bar-list">
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>大数据管理</strong>
+                <span>周立群 · 满载率 2%</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 100%"></span>
+              </div>
+              <em>2/80 人</em>
+            </div>
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>信息资源组织</strong>
+                <span>刘海燕 · 满载率 2%</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 50%"></span>
+              </div>
+              <em>1/40 人</em>
+            </div>
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>机器学习导论</strong>
+                <span>赵新宇 · 满载率 2%</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 50%"></span>
+              </div>
+              <em>1/50 人</em>
+            </div>
+          
+        </div>
+      </div>
+      <div class="stack-block">
+        <h4>任务推进榜</h4>
+        <div class="rank-bar-list">
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>张三</strong>
+                <span>阅读行为画像分析 · 刘海燕</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 100%"></span>
+              </div>
+              <em>70%</em>
+            </div>
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>李四</strong>
+                <span>高校数据目录梳理 · 周立群</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 79%"></span>
+              </div>
+              <em>55%</em>
+            </div>
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>王敏</strong>
+                <span>实验课预约优化 · 赵新宇</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 57%"></span>
+              </div>
+              <em>40%</em>
+            </div>
+          
+        </div>
+      </div>
+      <div class="stack-block">
+        <h4>实验室利用榜</h4>
+        <div class="rank-bar-list">
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>协同创新室</strong>
+                <span>实验楼 2 · 容量 30 人</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 100%"></span>
+              </div>
+              <em>累计预约 1 次</em>
+            </div>
+          
+            <div class="rank-bar-row slim">
+              <div class="rank-copy">
+                <strong>数据实验室 A</strong>
+                <span>实验楼 1 · 容量 48 人</span>
+              </div>
+              <div class="rank-meter">
+                <span style="width: 100%"></span>
+              </div>
+              <em>累计预约 1 次</em>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel" id="data-redis">
+  <div class="panel-heading">
+    <h3>Redis 键空间</h3>
+    <p>缓存、排行榜、配额、令牌、进度摘要都可以直接被观察。</p>
+  </div>
+  <div class="key-grid">
+    
+      <article class="key-card">
+        <span class="pill">ZSet</span>
+        <strong>book:hot:rank</strong>
+        <p>5:1, 2:1, 1:1</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>course:quota:1</strong>
+        <p>78</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>course:quota:2</strong>
+        <p>59</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>course:quota:3</strong>
+        <p>49</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>course:quota:4</strong>
+        <p>39</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>course:quota:5</strong>
+        <p>45</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>notice:due:2026-04-30</strong>
+        <p>[&#34;20230001&#34;, &#34;20230003&#34;]</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>project:progress:1</strong>
+        <p>{&#34;student&#34;: &#34;张三&#34;, &#34;progress&#34;: 70, &#34;status&#34;: &#34;进行中&#34;}</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>project:progress:2</strong>
+        <p>{&#34;student&#34;: &#34;李四&#34;, &#34;progress&#34;: 55, &#34;status&#34;: &#34;进行中&#34;}</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>project:progress:3</strong>
+        <p>{&#34;student&#34;: &#34;王敏&#34;, &#34;progress&#34;: 40, &#34;status&#34;: &#34;进行中&#34;}</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">ZSet</span>
+        <strong>rank:book:total</strong>
+        <p>5:1, 2:1, 1:1</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">ZSet</span>
+        <strong>rank:course:current</strong>
+        <p>1:2, 4:1, 3:1</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">ZSet</span>
+        <strong>rank:practice:lab:usage</strong>
+        <p>2:1, 1:1</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">ZSet</span>
+        <strong>rank:practice:progress</strong>
+        <p>1:70, 2:55, 3:40</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>teacher:dashboard:practice</strong>
+        <p>{&#34;ongoingProjects&#34;: 3, &#34;onTimeTasks&#34;: 2, &#34;riskTasks&#34;: 1}</p>
+      </article>
+    
+      <article class="key-card">
+        <span class="pill">String</span>
+        <strong>timetable:student:1:2025-2026-2</strong>
+        <p>[{&#34;course&#34;: &#34;大数据管理&#34;, &#34;schedule&#34;: &#34;周二 1-2 节&#34;, &#34;classroom&#34;: &#34;博学楼 A305&#34;}, {&#34;course&#34;</p>
+      </article>
+    
+  </div>
+</section>
+
+<section class="panel" id="data-mongo">
+  <div class="panel-heading">
+    <h3>Mongo 文档集合</h3>
+    <p>展示行为日志、变更日志、学业预警画像、实践风险画像、周报正文和导师评语，帮助说明文档型数据库的必要性。</p>
+  </div>
+  <div class="mongo-grid">
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>library_behavior_log</strong>
+          <span>3 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>6a1062523a7d62ced8296f5d</code>
+            <p>{&#39;_id&#39;: &#39;6a1062523a7d62ced8296f5d&#39;, &#39;studentName&#39;: &#39;张三&#39;, &#39;action&#39;: &#39;reserve_seat&#39;, &#39;seat&#39;: &#39;图书馆三楼自习室 A-101&#39;, &#39;reserveDate&#39;: &#39;2026-04-10&#39;, &#39;createdAt&#39;: &#39;2026-05-22 22:04:02&#39;}</p>
+          </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e720</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e720&#39;, &#39;studentName&#39;: &#39;王敏&#39;, &#39;action&#39;: &#39;borrow_book&#39;, &#39;bookTitle&#39;: &#39;Python 数据分析实战&#39;, &#39;device&#39;: &#39;Mobile&#39;, &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e71f</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e71f&#39;, &#39;studentName&#39;: &#39;张三&#39;, &#39;action&#39;: &#39;search_book&#39;, &#39;keyword&#39;: &#39;Redis&#39;, &#39;device&#39;: &#39;PC&#39;, &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>teaching_change_log</strong>
+          <span>1 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e721</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e721&#39;, &#39;operator&#39;: &#39;教务秘书&#39;, &#39;changeType&#39;: &#39;容量调整&#39;, &#39;target&#39;: &#39;大数据管理&#39;, &#39;beforeValue&#39;: 70, &#39;afterValue&#39;: 80, &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>warning_profile</strong>
+          <span>1 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e722</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e722&#39;, &#39;studentName&#39;: &#39;陈晨&#39;, &#39;riskType&#39;: &#39;成绩预警&#39;, &#39;ruleHitList&#39;: [&#39;单科不及格&#39;, &#39;总评低于 60&#39;], &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>internship_weekly_report</strong>
+          <span>1 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e723</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e723&#39;, &#39;studentName&#39;: &#39;张三&#39;, &#39;weekNo&#39;: 3, &#39;content&#39;: &#39;完成阅读行为画像分析可视化。&#39;, &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>evaluation_comment</strong>
+          <span>1 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>69e72b5f3398e554d307e724</code>
+            <p>{&#39;_id&#39;: &#39;69e72b5f3398e554d307e724&#39;, &#39;studentName&#39;: &#39;李四&#39;, &#39;comment&#39;: &#39;调研材料扎实，建议补充数据标准化章节。&#39;, &#39;createdAt&#39;: &#39;2026-04-21 15:46:39&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>practice_risk_profile</strong>
+          <span>3 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>6a127f7efeb4ccc5f118904d</code>
+            <p>{&#39;_id&#39;: &#39;6a127f7efeb4ccc5f118904d&#39;, &#39;studentName&#39;: &#39;王敏&#39;, &#39;projectTitle&#39;: &#39;实验课预约优化&#39;, &#39;riskLevel&#39;: &#39;高风险&#39;, &#39;riskScore&#39;: 99, &#39;ruleHitList&#39;: [&#39;任务进度低于 50%&#39;, &#39;周报数量偏少&#39;, &#39;暂无签到记录&#39;, &#39;暂无周报正文&#39;], &#39;suggestionList&#39;: [&#39;尽快拆分阶段目标并补录本周进展&#39;, &#39;补齐周报与阶段总结，避免过程材料缺口&#39;], &#39;progress&#39;: 40, &#39;weeklyCount&#39;: 1, &#39;attendanceCount&#39;: 0, &#39;createdAt&#39;: &#39;2026-05-24 12:33:02&#39;}</p>
+          </div>
+        
+          <div class="mongo-item">
+            <code>6a127f7efeb4ccc5f118904e</code>
+            <p>{&#39;_id&#39;: &#39;6a127f7efeb4ccc5f118904e&#39;, &#39;studentName&#39;: &#39;李四&#39;, &#39;projectTitle&#39;: &#39;高校数据目录梳理&#39;, &#39;riskLevel&#39;: &#39;中风险&#39;, &#39;riskScore&#39;: 46, &#39;ruleHitList&#39;: [&#39;任务进度低于理想值&#39;, &#39;最近签到时间偏早&#39;, &#39;最近周报更新滞后&#39;, &#39;缺少资源预约记录&#39;], &#39;suggestionList&#39;: [&#39;建议提高本周里程碑检查频率&#39;, &#39;补充近期待岗或现场记录&#39;], &#39;progress&#39;: 55, &#39;weeklyCount&#39;: 2, &#39;attendanceCount&#39;: 1, &#39;createdAt&#39;: &#39;2026-05-24 12:33:02&#39;}</p>
+          </div>
+        
+          <div class="mongo-item">
+            <code>6a127f7efeb4ccc5f118904f</code>
+            <p>{&#39;_id&#39;: &#39;6a127f7efeb4ccc5f118904f&#39;, &#39;studentName&#39;: &#39;张三&#39;, &#39;projectTitle&#39;: &#39;阅读行为画像分析&#39;, &#39;riskLevel&#39;: &#39;低风险&#39;, &#39;riskScore&#39;: 22, &#39;ruleHitList&#39;: [&#39;最近签到时间偏早&#39;, &#39;最近周报更新滞后&#39;], &#39;suggestionList&#39;: [&#39;补充近期待岗或现场记录&#39;, &#39;建议按周固定提交，避免阶段性断档&#39;], &#39;progress&#39;: 70, &#39;weeklyCount&#39;: 3, &#39;attendanceCount&#39;: 1, &#39;createdAt&#39;: &#39;2026-05-24 12:33:02&#39;}</p>
+          </div>
+        
+      </article>
+    
+      <article class="mongo-card">
+        <div class="mongo-head">
+          <strong>data_quality_snapshot</strong>
+          <span>1 条</span>
+        </div>
+        
+          <div class="mongo-item">
+            <code>6a127f7efeb4ccc5f118904c</code>
+            <p>{&#39;_id&#39;: &#39;6a127f7efeb4ccc5f118904c&#39;, &#39;snapshotName&#39;: &#39;campus_master_quality&#39;, &#39;summary&#39;: &#39;主数据综合质量 100.0 分，覆盖 5 类核心实体。&#39;, &#39;totalScore&#39;: 100.0, &#39;snapshotDate&#39;: &#39;2026-05-24&#39;, &#39;dimensions&#39;: [{&#39;name&#39;: &#39;完整性&#39;, &#39;score&#39;: 100.0}, {&#39;name&#39;: &#39;唯一性&#39;, &#39;score&#39;: 100.0}, {&#39;name&#39;: &#39;一致性&#39;, &#39;score&#39;: 100.0}, {&#39;name&#39;: &#39;完整关联性&#39;, &#39;score&#39;: 100.0}, {&#39;name&#39;: &#39;时效性&#39;, &#39;score&#39;: 100.0}], &#39;masterEntities&#39;: [{&#39;entity&#39;: &#39;学生主数据&#39;, &#39;count&#39;: 4}, {&#39;entity&#39;: &#39;教师主数据&#39;, &#39;count&#39;: 3}, {&#39;entity&#39;: &#39;课程主数据&#39;, &#39;count&#39;: 5}, {&#39;entity&#39;: &#39;图书主数据&#39;, &#39;count&#39;: 5}, {&#39;entity&#39;: &#39;空间主数据&#39;, &#39;count&#39;: 14}], &#39;createdAt&#39;: &#39;2026-05-24 12:33:02&#39;}</p>
+          </div>
+        
+      </article>
+    
+  </div>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 创新能力看板</h3>
+      <p>这里汇总 Capped、TTL、Geo、GridFS 和 Schema Validator 等 Mongo 能力在系统中的使用情况。</p>
+    </div>
+    <div class="catalog-grid">
+      
+        <article class="catalog-card">
+          <strong>library_behavior_log</strong>
+          <p>文档数：3</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / createdAt_-1 / studentName_1_action_1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>teaching_change_log</strong>
+          <p>文档数：1</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / createdAt_-1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>warning_profile</strong>
+          <p>文档数：1</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / studentName_1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>internship_weekly_report</strong>
+          <p>文档数：1</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / studentName_1_weekNo_1 / createdAt_-1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>evaluation_comment</strong>
+          <p>文档数：1</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / studentName_1 / createdAt_-1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>practice_risk_profile</strong>
+          <p>文档数：3</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / studentName_1 / riskLevel_1_riskScore_-1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>realtime_event_feed</strong>
+          <p>文档数：2</p>
+          <small>集合类型：Capped</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / createdAt_-1</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>search_session_cache</strong>
+          <p>文档数：2</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / keyword_1 / expireAt_1</small>
+          <small>TTL：expireAt_1</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>campus_space_geo</strong>
+          <p>文档数：6</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / spaceCode_1 / spaceType_1 / location_2dsphere</small>
+          <small>TTL：无</small>
+        </article>
+      
+        <article class="catalog-card">
+          <strong>data_quality_snapshot</strong>
+          <p>文档数：1</p>
+          <small>集合类型：普通集合</small>
+          <small>校验器：JSON Schema</small>
+          <small>索引：_id_ / createdAt_-1 / snapshotName_1</small>
+          <small>TTL：无</small>
+        </article>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 实时事件流</h3>
+      <p>该集合使用 Capped 模式，适合演示系统事件流与固定窗口日志。</p>
+    </div>
+    <div class="timeline">
+      
+        <div class="timeline-item">
+          <strong>library.reserve</strong>
+          <span>张三 预约 图书馆三楼自习室 A-101</span>
+          <small>2026-05-22 22:04:02</small>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>system.bootstrap</strong>
+          <span>已初始化 Mongo 创新集合：Capped、TTL、Geo、GridFS。</span>
+          <small>2026-04-21 15:46:39</small>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up" id="data-graph">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo TTL 与地理空间示例</h3>
+      <p>左侧展示 TTL 搜索缓存，右侧展示 2dsphere 索引下的校园空间近邻查询。</p>
+    </div>
+    <div class="log-columns">
+      <div>
+        <h4>TTL 搜索缓存（当前 2 条）</h4>
+        
+          <div class="mini-log">
+            <strong>MongoDB</strong>
+            <span>seed</span>
+            <small>失效时间：2026-05-24 12:45:37</small>
+          </div>
+        
+          <div class="mini-log">
+            <strong>Redis</strong>
+            <span>seed</span>
+            <small>失效时间：2026-05-24 12:45:37</small>
+          </div>
+        
+      </div>
+      <div>
+        <h4>地理近邻查询：图书馆中心点</h4>
+        
+          <div class="mini-log">
+            <strong>图书馆三楼自习室</strong>
+            <span>library · 图书馆</span>
+            <small>[116.3971, 39.90872]</small>
+          </div>
+        
+          <div class="mini-log">
+            <strong>图书馆四楼研讨区</strong>
+            <span>library · 图书馆</span>
+            <small>[116.39735, 39.90895]</small>
+          </div>
+        
+          <div class="mini-log">
+            <strong>企业沙盘室</strong>
+            <span>lab · 经管楼</span>
+            <small>[116.39672, 39.90815]</small>
+          </div>
+        
+          <div class="mini-log">
+            <strong>数据实验室 A</strong>
+            <span>lab · 实验楼 1</span>
+            <small>[116.3983, 39.90918]</small>
+          </div>
+        
+          <div class="mini-log">
+            <strong>博学楼 A305</strong>
+            <span>classroom · 博学楼</span>
+            <small>[116.39792, 39.90968]</small>
+          </div>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>GridFS 演示资产</h3>
+      <p>系统已把演示截图同步到 GridFS，可作为“文件型文档数据”的创新点写进报告。</p>
+    </div>
+    <div class="timeline">
+      
+        <div class="timeline-item">
+          <strong>graph_latest.png</strong>
+          <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\screenshots\graph_latest.png</span>
+          <small>1224863 bytes · 2026-05-22 11:38:18</small>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>governance_latest.png</strong>
+          <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\screenshots\governance_latest.png</span>
+          <small>1142486 bytes · 2026-05-22 11:38:18</small>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>practice_latest.png</strong>
+          <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\screenshots\practice_latest.png</span>
+          <small>983871 bytes · 2026-05-22 07:14:03</small>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>practice.png</strong>
+          <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\screenshots\practice.png</span>
+          <small>755121 bytes · 2026-05-22 07:14:03</small>
+        </div>
+      
+        <div class="timeline-item">
+          <strong>library_latest.png</strong>
+          <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\screenshots\library_latest.png</span>
+          <small>1225295 bytes · 2026-05-22 07:14:03</small>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Mongo 聚合管道示例</h3>
+      <p>使用 `$group` 和 `$sort` 直接统计行为结构，能明显体现文档数据库不仅存文档，也能做轻量分析。</p>
+    </div>
+    <div class="rank-bar-list">
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>borrow_book</strong>
+            <span>图书馆行为次数</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 24%"></span>
+          </div>
+          <em>1</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>reserve_seat</strong>
+            <span>图书馆行为次数</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 24%"></span>
+          </div>
+          <em>1</em>
+        </div>
+      
+        <div class="rank-bar-row slim">
+          <div class="rank-copy">
+            <strong>search_book</strong>
+            <span>图书馆行为次数</span>
+          </div>
+          <div class="rank-meter">
+            <span style="width: 24%"></span>
+          </div>
+          <em>1</em>
+        </div>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>聚合结果与管道设计</h3>
+      <p>这一块适合写进报告“MongoDB 创新点”，把集合、字段和聚合阶段讲清楚。</p>
+    </div>
+    <div class="stacked-blocks">
+      <div class="stack-block">
+        <h4>空间类型分布</h4>
+        
+          <p><strong>lab</strong>：3 个空间</p>
+        
+          <p><strong>library</strong>：2 个空间</p>
+        
+          <p><strong>classroom</strong>：1 个空间</p>
+        
+      </div>
+      <div class="stack-block">
+        <h4>事件流类型</h4>
+        
+          <p><strong>library.reserve</strong>：1 次事件</p>
+        
+          <p><strong>system.bootstrap</strong>：1 次事件</p>
+        
+      </div>
+      <div class="stack-block">
+        <h4>聚合管道</h4>
+        
+          <p><strong>借阅行为聚合</strong>：$group -&gt; $sort · library_behavior_log.action</p>
+        
+          <p><strong>空间类型聚合</strong>：$group -&gt; $sort · campus_space_geo.spaceType</p>
+        
+          <p><strong>事件流聚合</strong>：$group -&gt; $sort · realtime_event_feed.eventType</p>
+        
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="section-grid two-up">
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>图数据库扩展快照</h3>
+      <p>将三大子系统抽象成统一图模型后，可直接展示节点类型和关系类型分布。</p>
+    </div>
+    <div class="warning-grid">
+      
+        <div class="warning-card alt">
+          <strong>Book</strong>
+          <span>5 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+        <div class="warning-card alt">
+          <strong>Course</strong>
+          <span>5 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+        <div class="warning-card alt">
+          <strong>Major</strong>
+          <span>4 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+        <div class="warning-card alt">
+          <strong>Student</strong>
+          <span>4 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+        <div class="warning-card alt">
+          <strong>Base</strong>
+          <span>3 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+        <div class="warning-card alt">
+          <strong>Category</strong>
+          <span>3 个节点</span>
+          <small>节点总量 42</small>
+        </div>
+      
+      
+        <div class="warning-card">
+          <strong>ENROLLED_IN</strong>
+          <span>5 条关系</span>
+          <small>关系总量 44</small>
+        </div>
+      
+        <div class="warning-card">
+          <strong>IN_CATEGORY</strong>
+          <span>5 条关系</span>
+          <small>关系总量 44</small>
+        </div>
+      
+        <div class="warning-card">
+          <strong>SCORED_IN</strong>
+          <span>5 条关系</span>
+          <small>关系总量 44</small>
+        </div>
+      
+        <div class="warning-card">
+          <strong>TEACHES</strong>
+          <span>5 条关系</span>
+          <small>关系总量 44</small>
+        </div>
+      
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <h3>Cypher 导出与推荐结果</h3>
+      <p>项目会自动导出可导入 Neo4j 的 Cypher 文件，并生成基于多跳路径的推荐结果。</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <strong>Cypher 文件</strong>
+        <span>C:\Users\css\Documents\Playground\apps\smart_campus_demo\data\graph\smart_campus_graph.cypher</span>
+      </div>
+      
+        <div class="timeline-item">
+          <strong>机器学习导论</strong>
+          <span>张三</span>
+          <small>李四 -&gt; 大数据管理 &lt;- 张三 -&gt; 机器学习导论</small>
+        </div>
+      
+    </div>
+  </article>
+</section>
+
+      </main>
+
+      <footer class="footer">
+        <p>技术结构：SQLite 负责事务层，Redis 负责缓存与排行，MongoDB 负责日志、画像和文档扩展，图谱模块负责关系抽象与 Cypher 导出。</p>
+      </footer>
+    </div>
+  </div>
+  <script src="./static/app.js"></script>
+</body>
+</html>
